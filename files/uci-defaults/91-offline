@@ -1,4 +1,0 @@
-#!/bin/sh
-uci set system.status=status
-uci set system.status.online=0
-exit 1
