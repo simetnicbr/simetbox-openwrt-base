@@ -1,0 +1,29 @@
+#!/bin/sh
+
+first_boot=0
+
+if [ ! -f "/etc/config/simet_cron" ]; 
+then
+    first_boot=1
+fi
+
+if [ ! -d "/etc/factory_config" ]; then
+    if [ "$first_boot" = "0" -o -d "/etc/copied_config" ]; then
+        if [ ! -d "/etc/copied_config" ]; then
+            mkdir -p /etc/copied_config
+            cp /etc/config/* /etc/copied_config
+            firstboot && reboot
+        else
+            mkdir -p /etc/factory_config
+            cp /etc/config/* /etc/factory_config/
+            cp /etc/copied_config/* /etc/config/
+        fi
+    else
+        mkdir -p /etc/factory_config
+        cp /etc/config/* /etc/factory_config/
+    fi
+fi
+
+rm -rf /etc/copied_config
+
+exit 1

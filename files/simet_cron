@@ -1,0 +1,34 @@
+config 'auto_upgrade' 'auto_upgrade'
+	option 'time_step' '240'
+
+config 'content_provider' 'content_provider'
+	option 'time_step' '60'
+
+config 'service_down' 'service_down'
+	option 'time_step' '60'
+
+config 'simet_dns' 'simet_dns'
+	option 'time_step' '240'
+
+config 'simet_ntpq' 'simet_ntpq'
+	option 'time_step' '180'
+
+config 'simet_alexa' 'simet_alexa'
+	option 'time_step' '360'
+
+config 'simet_bcp38' 'simet_bcp38'
+	option 'time_step' '720'
+
+config 'simet_ping' 'simet_ping'
+	option 'W' '11'
+	option 'time_step' '60'
+	option 'c' '3'
+
+config 'simet_test' 'simet_test'
+	option 'time_step' '180'
+
+config 'simet_port25' 'simet_port25'
+	option 'time_step' '720'
+
+config 'simet_send_if_traffic' 'simet_send_if_traffic'
+	option 'time_step' '20'

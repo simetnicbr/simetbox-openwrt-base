@@ -1,0 +1,4 @@
+#!/bin/sh
+simet_client2 -4
+sleep 60
+simet_client2 -6

@@ -1,0 +1,101 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2017 NIC.br
+
+START=50
+
+start() {
+	if [ ! -f "/etc/config/hash" ]
+	then
+		total_radio=$(uci show wireless | awk -F '.' '{print $2}' | grep "=wifi-device" | wc -l)
+		mac_address=""
+		cont=0
+		while [ $cont -lt $total_radio ]
+		do
+		        echo "cont: $cont"
+		        radio_state_disabled=$(uci get wireless.radio$cont.disabled)
+		        echo "radio_state_disabled: $radio_state_disabled"
+		        if [ $radio_state_disabled == 1 ] ; then
+		                uci set wireless.radio$cont.disabled=0
+		                wifi
+		                sleep 5
+		        fi
+
+		        mac_address="$mac_address
+$(ifconfig | grep wlan$cont | grep HWaddr | awk '{print $5}')"
+
+		        if [ $radio_state_disabled == 1 ] ; then
+		                uci set wireless.radio$cont.disabled=1
+		                wifi
+		        fi
+
+		        cont=$(expr $cont + 1)
+		done
+		mac_address="$mac_address
+		$(ifconfig -a | grep HWaddr | awk '{print $5}')"
+		hash_mac_address=$(echo "$mac_address" | sort | uniq | md5sum | awk '{print $1}')
+		echo "$hash_mac_address" > /etc/config/hash
+	fi
+
+	prefix=""
+	simetbox=`cat "/etc/openwrt_release" | grep "DISTRIB_ID" | cut -f 2 -d '=' | sed "s/['\"]//g"`
+	if [ "$simetbox" == "SIMETBOX" ] ; then
+        	prefix="SIMETBOX-"
+	fi
+
+	sleep 10 # wait for 10 seconds to start the network
+
+	if [ -f "/etc/config/simet_installed/simetbox_network_and_config_installed" ]
+	then
+		uci set easycwmp.@acs[0].periodic_interval='30'
+		uci set easycwmp.@acs[0].username=$(get_mac_address.sh)
+		uci set easycwmp.@acs[0].password=$(get_mac_address.sh)
+		uci set easycwmp.@local[0].username=$(get_mac_address.sh)
+		uci set easycwmp.@local[0].password=$(get_mac_address.sh)
+		uci set easycwmp.@device[0].oui='SIMETBOX'
+		uci set easycwmp.@acs[0].url=$(cat /etc/config/tr069_server)
+		uci set easycwmp.@device[0].serial_number=$(get_mac_address.sh)
+		device_procuct=$(grep -v "DEVICE_MANUFACTURER" /etc/device_info | grep -v "DEVICE_PRODUCT")
+		echo "DEVICE_MANUFACTURER='$(grep -e "^machine" /proc/cpuinfo | awk '{print $3}')'
+DEVICE_PRODUCT='$prefix$(/usr/bin/get_model.sh)'
+$device_procuct" > /etc/device_info
+		uci commit easycwmp
+
+		acs_server=$(cat /etc/config/tr069_server | sed -e "s/http:\/\///g" | sed -e "s/https:\/\///g" | sed -e "s/\/.*//")
+		ip_acs_server=$(ping -4 $acs_server -c 1 2>/dev/null | grep "64 bytes" | awk {'print $4'} | sed -e 's/://g')
+		if [ "ip_acs_server" != "" ] ; then
+
+			firewall=$(grep "Allow-TR-069" /etc/config/firewall)
+			if [ "$firewall" == "" ] ; then
+
+			echo "
+config rule
+        option name             Allow-TR-069
+        option src              wan
+        option src_ip           '$ip_acs_server'
+        option proto            TCP
+        option dest_port        7547
+        option target           ACCEPT
+        option family           ipv4
+" >> /etc/config/firewall
+			/etc/init.d/firewall restart
+			fi
+		fi
+	fi
+
+
+        mac_address=`/usr/bin/get_mac_address.sh`
+	if [ -f /rom/etc/zabbix_agentd.conf ] ; then
+		zabbix=$(zabbix_agentd -V | grep -e "v2\.")
+		if [ "$zabbix" == "" ] ; then
+			sed -e "s/<CHANGE_HOSTNAME>/$mac_address/" /rom/etc/zabbix_agentd_v3_simetbox.conf > /etc/zabbix_agentd.conf
+		fi
+		if [ "$zabbix" != "" ] ; then
+			sed -e "s/<CHANGE_HOSTNAME>/$mac_address/" /rom/etc/zabbix_agentd_v2_simetbox.conf > /etc/zabbix_agentd.conf
+		fi
+	fi
+	if [ -f /rom/etc/ntp.conf_simetbox ] ; then
+		cp /etc/ntp.conf_simetbox /etc/ntp.conf
+	fi
+	/usr/bin/simetbox_register.sh 1>/dev/null 2>/dev/null&
+}
+
