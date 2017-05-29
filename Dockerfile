@@ -14,11 +14,13 @@ RUN	apt-get update \
 	libssl-dev \
 	libjson0 \
 	libjson0-dev \
-	ibncurses5-dev \
+	libncurses5-dev \
 	unzip \
 	gawk \
 	zlib1g-dev \
 	subversion \
+	git \
+	ca-certificates \
 	--no-install-recommends \
 	&& tar zxf simetbox-openwrt-base.tar.gz
 
