@@ -15,6 +15,8 @@ RUN	apt-get update \
 	libjson0 \
 	libjson0-dev \
 	--no-install-recommends \
+	&& tar zxf master.tar.gz
+
 WORKDIR "/src/simetbox-openwrt-base-master"
 
 	&& autoreconf \
