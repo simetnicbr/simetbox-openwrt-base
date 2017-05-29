@@ -4,7 +4,7 @@ MAINTAINER "Fabio Rodrigues Ribeiro <farribeiro@gmail.com>"
 
 ADD https://github.com/simetnicbr/simetbox-openwrt-base/archive/master.tar.gz /src/
 
-WORKDIR "/src/simetbox-openwrt-base-master"
+WORKDIR "/src"
 
 RUN	apt-get update \
 	&& apt-get upgrade -y \
@@ -15,6 +15,8 @@ RUN	apt-get update \
 	libjson0 \
 	libjson0-dev \
 	--no-install-recommends \
+WORKDIR "/src/simetbox-openwrt-base-master"
+
 	&& autoreconf \
 	&& automake --add-missing \
 	&& ./configure \
