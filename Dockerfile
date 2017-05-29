@@ -32,3 +32,13 @@ RUN	automake --add-missing \
 
 ADD	https://github.com/openwrt/archieve/master.tar.gz /src/openwrt.tar.gz
 
+WORKDIR "/src"
+
+RUN	tar zxf openwrt.tar.gz
+
+WORKDIR "/src/openwrt-master"
+
+RUN	echo "src-git simetbox https://github.com/simetnicbr/simetbox-openwrt-feed.git" > feeds.conf \
+	&& cat feeds.conf.default >> feeds.conf \
+	&& cp feeds.conf feeds.conf.default
+	&& make package/symlinks
