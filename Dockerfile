@@ -14,6 +14,11 @@ RUN	apt-get update \
 	libssl-dev \
 	libjson0 \
 	libjson0-dev \
+	ibncurses5-dev \
+	unzip \
+	gawk \
+	zlib1g-dev \
+	subversion \
 	--no-install-recommends \
 	&& tar zxf master.tar.gz
 
