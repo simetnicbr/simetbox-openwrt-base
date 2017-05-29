@@ -10,6 +10,10 @@ RUN	apt-get update \
 	&& apt-get upgrade -y \
 	&& apt-get install -y \
 	build-essential \
+	dh-autoreconf \
+	libssl-dev \
+	libjson0 \
+	libjson0-dev \
 	--no-install-recommends \
 	&& autoreconf \
 	&& automake --add-missing \
