@@ -2,7 +2,7 @@
 FROM debian:latest
 MAINTAINER "Fabio Rodrigues Ribeiro <farribeiro@gmail.com>"
 
-ADD https://github.com/simetnicbr/simetbox-openwrt-base/archive/master.tar.gz /src/
+ADD https://github.com/simetnicbr/simetbox-openwrt-base/archive/master.tar.gz /src/simet-openwrt-base.tar.gz
 
 WORKDIR "/src"
 
@@ -20,7 +20,7 @@ RUN	apt-get update \
 	zlib1g-dev \
 	subversion \
 	--no-install-recommends \
-	&& tar zxf master.tar.gz
+	&& tar zxf simetbox-openwrt-base.tar.gz
 
 WORKDIR "/src/simetbox-openwrt-base-master"
 
@@ -29,3 +29,6 @@ RUN	autoreconf ; exit 0
 RUN	automake --add-missing \
 	&& ./configure \
 	&& make install
+
+ADD	https://github.com/openwrt/archieve/master.tar.gz /src/openwrt.tar.gz
+
