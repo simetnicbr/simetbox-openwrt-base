@@ -32,7 +32,7 @@ RUN	automake --add-missing \
 	&& ./configure \
 	&& make install
 
-ADD	https://github.com/openwrt/archieve/master.tar.gz /src/openwrt.tar.gz
+ADD	https://github.com/openwrt/openwrt/archive/master.tar.gz /src/openwrt.tar.gz
 
 WORKDIR "/src"
 
