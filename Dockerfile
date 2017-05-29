@@ -42,5 +42,5 @@ WORKDIR "/src/openwrt-master"
 
 RUN	echo "src-git simetbox https://github.com/simetnicbr/simetbox-openwrt-feed.git" > feeds.conf \
 	&& cat feeds.conf.default >> feeds.conf \
-	&& cp feeds.conf feeds.conf.default
+	&& cp feeds.conf feeds.conf.default \
 	&& make package/symlinks
