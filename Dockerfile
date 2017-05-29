@@ -19,7 +19,8 @@ RUN	apt-get update \
 
 WORKDIR "/src/simetbox-openwrt-base-master"
 
-	&& autoreconf ; exit 0 \
-	&& automake --add-missing \
+RUN	autoreconf ; exit 0
+
+RUN	automake --add-missing \
 	&& ./configure \
 	&& make install
