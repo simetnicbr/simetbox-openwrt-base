@@ -7,6 +7,7 @@ Estrutura básica para o SIMETBox
 O SIMETBox é um sistema inicialmente desenvolvido para roteadores com OpenWRT para medir a qualidade de vários quesitos na internet. Vários testes são realizados até os PTTs do [IX.br](http://ix.br). Os testes realizados pela solução são: latência até os PTTs e gateway da rede, perda de pacotes, jitter, vazão, qualidade dos sites mais acessados no Brasil, localização dos servidores de conteúdo, validação da [BCP-38](http://bcp.nic.br), teste para [gerência de porta 25](http://www.antispam.br/admin/porta25/definicao/) e testes de P2P. Os resultados ficam disponíveis aos usuários através de interface WEB e ao provedor através de [portal](https://pas.nic.br) próprio para isto.
 
 ## Instalação
+É pré-requisito para compilação deste sistema, o sistema [simetbox-openwrt-config](https://github.com/simetnicbr/simetbox-openwrt-config.git). Após isto, pode-se seguir os passos para instalação:
 
 ```bash
 git clone https://github.com/simetnicbr/simetbox-openwrt-base.git
