@@ -25,6 +25,7 @@ RUN	apt-get update \
 	git \
 	ca-certificates \
 	--no-install-recommends \
+	&& mkdir -p /src/simetbox \
 	&& tar zxf simetbox-openwrt-base.tar.gz \
 	&& tar zxf simetbox-openwrt-feed.tar.gz \
 	&& tar zxf simetbox-openwrt-config.tar.gz \
@@ -33,7 +34,7 @@ RUN	apt-get update \
 	&& rsync -av /src/simetbox-openwrt-feed-master/* /src/simetbox \
 	&& rsync -av /src/simetbox-openwrt-config-master/* /src/simetbox
 
-WORKDIR "/src/simetbox-openwrt-base-master"
+WORKDIR "/src/simetbox"
 
 RUN	autoreconf ; exit 0
 
