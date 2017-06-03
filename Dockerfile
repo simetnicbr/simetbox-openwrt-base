@@ -45,11 +45,6 @@ RUN	automake --add-missing \
 	&& ./configure \
 	&& make install
 
-
-WORKDIR "/src"
-
-RUN	tar zxf openwrt.tar.gz
-
 WORKDIR "/src/openwrt-master"
 
 RUN	echo "src-git simetbox https://github.com/simetnicbr/simetbox-openwrt-feed.git" > feeds.conf \
