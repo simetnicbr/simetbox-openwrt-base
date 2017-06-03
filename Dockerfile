@@ -2,7 +2,10 @@
 FROM debian:latest
 MAINTAINER "Fabio Rodrigues Ribeiro <farribeiro@gmail.com>"
 
-ADD https://github.com/simetnicbr/simetbox-openwrt-base/archive/master.tar.gz /src/simet-openwrt-base.tar.gz
+ADD https://github.com/simetnicbr/simetbox-openwrt-base/archive/master.tar.gz /src/simetbox-openwrt-base.tar.gz
+ADD https://github.com/simetnicbr/simetbox-openwrt-feed/archive/master.tar.gz /src/simetbox-openwrt-feed.tar.gz
+ADD https://github.com/simetnicbr/simetbox-openwrt-config/archive/master.tar.gz /src/simetbox-openwrt-config.tar.gz
+ADD https://github.com/openwrt/openwrt/archive/master.tar.gz /src/openwrt.tar.gz
 
 WORKDIR "/src"
 
@@ -32,7 +35,6 @@ RUN	automake --add-missing \
 	&& ./configure \
 	&& make install
 
-ADD	https://github.com/openwrt/openwrt/archive/master.tar.gz /src/openwrt.tar.gz
 
 WORKDIR "/src"
 
