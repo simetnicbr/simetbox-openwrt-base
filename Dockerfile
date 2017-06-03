@@ -24,6 +24,9 @@ RUN	apt-get update \
 	subversion \
 	git \
 	ca-certificates \
+	python \
+	wget \
+	rsync \
 	--no-install-recommends \
 	&& mkdir -p /src/simetbox \
 	&& tar zxf simetbox-openwrt-base.tar.gz \
