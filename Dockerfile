@@ -1,5 +1,5 @@
 # Base image
-FROM debian:latest
+FROM debian:jessie
 MAINTAINER "Fabio Rodrigues Ribeiro <farribeiro@gmail.com>"
 
 ADD https://github.com/simetnicbr/simetbox-openwrt-base/archive/master.tar.gz /src/simetbox-openwrt-base.tar.gz
