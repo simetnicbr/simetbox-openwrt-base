@@ -50,3 +50,5 @@ RUN	echo "src-git simetbox https://github.com/simetnicbr/simetbox-openwrt-feed.g
 	&& make package/symlinks
 
 COPY	.config /src/openwrt-chaos_calmer/.config
+
+RUN	make -j8
