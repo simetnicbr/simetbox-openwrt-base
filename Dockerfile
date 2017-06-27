@@ -3,7 +3,6 @@ FROM debian:jessie
 MAINTAINER "Fabio Rodrigues Ribeiro <farribeiro@gmail.com>"
 
 ADD https://github.com/simetnicbr/simetbox-openwrt-base/archive/master.tar.gz /src/simetbox-openwrt-base.tar.gz
-ADD https://github.com/simetnicbr/simetbox-openwrt-feed/archive/master.tar.gz /src/simetbox-openwrt-feed.tar.gz
 ADD https://github.com/simetnicbr/simetbox-openwrt-config/archive/master.tar.gz /src/simetbox-openwrt-config.tar.gz
 ADD https://github.com/openwrt/openwrt/archive/chaos_calmer.tar.gz /src/openwrt.tar.gz
 
@@ -30,11 +29,9 @@ RUN	apt-get update \
 	--no-install-recommends \
 	&& mkdir -p /src/simetbox \
 	&& tar zxf simetbox-openwrt-base.tar.gz \
-	&& tar zxf simetbox-openwrt-feed.tar.gz \
 	&& tar zxf simetbox-openwrt-config.tar.gz \
 	&& tar zxf openwrt.tar.gz \
 	&& rsync -av /src/simetbox-openwrt-base-master/* /src/simetbox \
-	&& rsync -av /src/simetbox-openwrt-feed-master/* /src/simetbox \
 	&& rsync -av /src/simetbox-openwrt-config-master/* /src/simetbox
 
 WORKDIR "/src/simetbox"
