@@ -5,7 +5,7 @@ MAINTAINER "Fabio Rodrigues Ribeiro <farribeiro@gmail.com>"
 ADD https://github.com/simetnicbr/simetbox-openwrt-base/archive/master.tar.gz /src/simetbox-openwrt-base.tar.gz
 ADD https://github.com/simetnicbr/simetbox-openwrt-feed/archive/master.tar.gz /src/simetbox-openwrt-feed.tar.gz
 ADD https://github.com/simetnicbr/simetbox-openwrt-config/archive/master.tar.gz /src/simetbox-openwrt-config.tar.gz
-ADD https://github.com/openwrt/openwrt/archive/master.tar.gz /src/openwrt.tar.gz
+ADD https://github.com/openwrt/openwrt/archive/chaos_calmer.tar.gz /src/openwrt.tar.gz
 
 WORKDIR "/src"
 
@@ -45,7 +45,7 @@ RUN	automake --add-missing \
 	&& ./configure \
 	&& make install
 
-WORKDIR "/src/openwrt-master"
+WORKDIR "/src/openwrt-chaos_calmer"
 
 RUN	echo "src-git simetbox https://github.com/simetnicbr/simetbox-openwrt-feed.git" > feeds.conf \
 	&& cat feeds.conf.default >> feeds.conf \
