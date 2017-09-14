@@ -1,6 +1,19 @@
 #!/bin/sh
 
 . /etc/config/simet.conf
+[ -r /etc/config/simet-private.conf ] && . /etc/config/simet-private.conf
+
+#
+# Chave de API para geolocalização é requisito
+# para que este script funcione.  Caso não tenha
+# sido definida, sai sem fazer nada.  Defina em
+# /etc/config/simet-private.conf.
+#
+
+if [ -z "$GOOGLE_MAP_GEOLOC_APIKEY" ] ; then
+	echo "$0: please define GOOGLE_MAP_GEOLOC_APIKEY in /etc/config/simet-private.conf" >&2
+	exit 0
+fi
 
 hash_device=${hash_device:-$(get_mac_address.sh)}
 
@@ -141,8 +154,7 @@ echo "BSSes detected for geolocalization: $mac_address"
 
 geoapi_precheck $mac_address
 
-#FIXME: chave deve ir em simet.conf
-saida_geoloc=$(generate_geopost_body $mac_address | send_geoquery CHAVEAPIVAIAQUI | \
+saida_geoloc=$(generate_geopost_body $mac_address | send_geoquery "$GOOGLE_MAP_GEOLOC_APIKEY" | \
 	awk '
 		BEGIN { FS=":|," ; accuracy=0 ; code=200 ; n=0 }
 		/"code"/     { code=$2 }
