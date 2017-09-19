@@ -31,3 +31,16 @@
 # Debug files
 *.dSYM/
 *.su
+*.o
+.DS_Store
+
+# Misc
+.*.swp
+*.orig
+*.rej
+*~
+.#*
+*#
+.emacs.desktop*
+TAGS*~
+git-src
