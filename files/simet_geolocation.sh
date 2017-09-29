@@ -1,5 +1,14 @@
 #!/bin/sh
 
+###
+## simet_geolocation.sh - simet geolocation helper
+## Copyright 2012-2017 NIC.br
+##
+## Parameters:
+## @1 - measure id, optional. When unspecificed, does only
+##      device geolocation webservice update calls.
+##
+
 # Pode ser modificado por simet.conf ou simet-private.conf, mas
 # isso não é oficialmente documentado.
 GEOLOC_CACHE=/tmp/simet_geolocation_cache
@@ -131,14 +140,12 @@ geoapi_precheck() {
 	:
 }
 
-if [ $# -eq 0 ]
-  then
-    echo "No arguments supplied"
-    echo "use simet_geolocation.sh <hash_measure>"
-    exit
-fi
-
+# Pode ser vazia!
 hash_measure=$1
+
+if [ -z "$hash_measure" ] ; then
+	echo "hash_measure not specificed, will persist only device location"
+fi
 
 #FIXME: no lugar de ligar "oficialmente" o radio de forma temporária,
 #ligar direto em modo passivo, fazer o scan, e derrubar, assim não
@@ -199,11 +206,15 @@ if [ -z "$TMPGEO" ] || [ -z "$TMPGEOD" ] ; then
 	exit 1
 fi
 
-generate_simetws_measure $saida_geoloc > "$TMPGEO"
 generate_simetws_device  $saida_geoloc > "$TMPGEOD"
-
-envia_geolocation=$(simet_ws -p "https://$cf_host/$cf_simet_web_persistence/geolocation" -f "$TMPGEO")
 envia_geolocation_d=$(simet_ws -p "https://$cf_host/$cf_simet_web_persistence_optional/geolocation-device" -f "$TMPGEOD")
+
+if [ -n "$hash_measure" ] ; then
+	generate_simetws_measure $saida_geoloc > "$TMPGEO"
+	envia_geolocation=$(simet_ws -p "https://$cf_host/$cf_simet_web_persistence/geolocation" -f "$TMPGEO")
+else
+	envia_geolocation="(skipped, hash_measure was not specificed)"
+fi
 
 rm -f "$TMPGEO"
 rm -f "$TMPGEOD"
