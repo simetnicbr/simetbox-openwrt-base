@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# Pode ser modificado por simet.conf ou simet-private.conf, mas
+# isso não é oficialmente documentado.
+GEOLOC_CACHE=/tmp/simet_geolocation_cache
+
 . /etc/config/simet.conf
 [ -r /etc/config/simet-private.conf ] && . /etc/config/simet-private.conf
 
@@ -16,6 +20,20 @@ if [ -z "$GOOGLE_MAP_GEOLOC_APIKEY" ] ; then
 fi
 
 hash_device=${hash_device:-$(get_mac_address.sh)}
+
+##
+# persist_geoloc_RAM() - armazena em cache volátil local a geoloc
+# $1: latitude
+# $2: longitude
+# $3: precisao
+#
+persist_geoloc_RAM() {
+	# Presença ou ausência do arquivo de cache indica se alguma
+	# geolocalização já foi feita neste boot.
+	touch "${GEOLOC_CACHE}" && chmod 0600 "${GEOLOC_CACHE}"
+	( date -u +%s && echo "$1" "$2" "$3" ) > "${GEOLOC_CACHE}"
+	:
+}
 
 ##
 # generate_geopost_body() - gera POST body para Google geolocation API
@@ -171,6 +189,7 @@ if [ "x$saida_geoloc" = "x" ] ; then
 fi
 
 echo "geolocation result: " $saida_geoloc
+persist_geoloc_RAM $saida_geoloc
 
 TMPGEO=$(mktemp -t simetgeoloc.$$.XXXXXX) && TMPGEOD=$(mktemp -t simetgeoloc_d.$$.XXXXXX)
 
