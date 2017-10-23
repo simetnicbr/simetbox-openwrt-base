@@ -933,7 +933,6 @@ int meu_pthread_create (pthread_t *thread, size_t tam_stack_thread, void *(*star
 	else
 		ERROR_PRINT ("tamanho de pilha deve ser maior que PTHREAD_STACK_MIN: %d", PTHREAD_STACK_MIN);
 	pthread_attr_getstacksize (&attrs, &tam_stack_thread);
-	INFO_PRINT ("tam_stack_thread %zu\n", tam_stack_thread);
 
 	return pthread_create (thread, &attrs, start_routine, arg);
 }

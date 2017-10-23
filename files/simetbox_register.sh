@@ -20,6 +20,10 @@ do
 #  echo "output_send_hash: $output_send_hash"
   if [ "$output_send_hash" != "" ] ; then
     touch /etc/config/simetbox_hash_configured
-  fi      
-  sleep 10
+    sleep 2
+    # geolocalização de registro da caixa
+    simet_geolocation.sh
+  else
+    sleep 10
+  fi
 done
