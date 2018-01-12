@@ -223,41 +223,36 @@ int connect_tcp(const char *host, const char *port, int family, int *sock) {
 	bzero(&local_hints, sizeof(struct addrinfo));
 	local_hints.ai_socktype = SOCK_STREAM;
 	local_hints.ai_flags = AI_CANONNAME;
-
 	local_hints.ai_family = convert_family_type(family);
-
 
 	if ((n = getaddrinfo(host, port, &local_hints, &res)) != 0) {
 		ERRNO_PRINT("connect_tcp erro #%d para %s, %s, %d: %s\n", n, host, port, family, gai_strerror(n));
 		return n;
 	}
-	for (num_reg = 0, temp = res; temp != NULL; temp = temp->ai_next) {
+
+	/* start res at a random point in the getaddrinfo result */
+	/* Note: MUSL wants us to treat (struct addrinfo)->ai_next as const! */
+	ressave = res; /* res is !NULL by getaddrinfo semanthics */
+	num_reg = 0;
+	while (res) {
 		num_reg++;
-//		ip = get_ip (temp->ai_addr);
-//		INFO_PRINT ("%s", ip);
-//		free (ip);
-		if ((num_reg > 1) && (temp->ai_next == NULL)) {
-			temp2 = temp;
-			temp->ai_next = res;
-			break;
-		}
+		res = res->ai_next;
 	}
-	if (num_reg > 1) {
-		num_shift = get_rand_i() % num_reg;
-//		INFO_PRINT ("shift: %d\n", num_shift);
-		for (i = 0, temp = res; i < num_shift; temp2 = temp, temp = temp->ai_next, i++);
-		temp2->ai_next = NULL;
-		ressave = res = temp;
+	num_shift = get_rand_i() % num_reg;
+	INFO_PRINT("connect_tcp: starting at getaddrinfo() element %d of %d", num_shift, num_reg);
+	res = ressave;
+	while (num_shift > 0 && res->ai_next) {
+		res = res->ai_next;
+		num_shift--;
 	}
-	else ressave = res;
 
-
-//	for (temp = res; temp != NULL; temp = temp->ai_next) {
-//		ip = get_ip (temp->ai_addr);
-//		INFO_PRINT ("%s", ip);
-//		free (ip);
-//	}
-	do {
+	conectou = 0;
+	while (!conectou && num_reg > 0) {
+		/* move to next element, we will get to the initial element for last */
+		num_reg--;
+		res = res->ai_next;
+		if (!res) /* warp-around */
+			res = ressave;
 
 		sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 		if (sockfd < 0){
@@ -280,8 +275,8 @@ int connect_tcp(const char *host, const char *port, int family, int *sock) {
 		tval.tv_sec = TIMEOUT;
 		tval.tv_usec = 0;
 		clock_gettime(CLOCK_MONOTONIC, &ts_ini);
-		ip = get_ip (res->ai_addr);
 
+		ip = get_ip (res->ai_addr);
 		INFO_PRINT ("conectando a %s:%s... ", ip, port);
 		free (ip);
 
@@ -334,7 +329,7 @@ int connect_tcp(const char *host, const char *port, int family, int *sock) {
 			continue;
 
 		}
-	} while ((!conectou) && ((res = res->ai_next) != NULL));
+	}
 
 	if (!conectou) {
 		ERROR_PRINT ("connect_tcp error for %s, %s, familia:%d", host, port, family);
@@ -348,11 +343,12 @@ int connect_tcp(const char *host, const char *port, int family, int *sock) {
 	else {
 		INFO_PRINT ("conectado");
 	}
-	freeaddrinfo(ressave);
 
+	freeaddrinfo(ressave);
 	*sock = sockfd;
 	return *sock;
 }
+
 int converte_str_ip (const char *host, void *addr) {
 	int n;
 	struct addrinfo local_hints, *res;
