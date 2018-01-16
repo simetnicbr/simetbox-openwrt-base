@@ -503,14 +503,16 @@ int captura_lock (int tentativa, char* lockfile) {
 		fclose (plockfile);
 	return local_lockfd;
 }
-void *watchdog () {
+
+
+void *watchdog (void * unused __attribute__((unused)) ) {
 	sleep (TEMPO_WATCHDOG);
-	INFO_PRINT("saindo watchdog\n");
+	INFO_PRINT("watchdog: aborting program\n");
 	saida(1);
+
+	/* not reached */
 	return NULL;
 }
-
-
 
 
 char * get_json_string_from_str (char *string, char *parametro) {

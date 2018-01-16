@@ -67,7 +67,7 @@ typedef struct {
 	struct timespec ts_cur;
 } signal_thread_vazao_udp_upload_arg;
 
-void *link_biblioteca_dinamica();
+void *link_biblioteca_dinamica(void);
 int captura_lock (int tentativa, char *lockfile);
 void saida (int rc);
 //char *chama_web_service (char* host, char *port, char *chamada);
@@ -75,13 +75,13 @@ char *chama_pipe (char *comando, char *erro);
 int hexdump ( unsigned char *c, int size );
 //char *chama_troca_msg_tcp (int sock, char* host, char *port, char *chamada);
 char *remove_barra_r_barra_n (char *str);
-void *watchdog ();
+void *watchdog (void *);
 char * get_json_string_from_ws (char *host, char *port, int family, char *formata_parametro, char *parametro, SSL_CTX *ssl_ctx);
 char * get_hash_measure (char *host, char *port, int family, char *context_root, char* mac_address, SSL_CTX *ssl_ctx);
 char* converte_url (char *assinatura);
 char* converte_url2 (char *assinatura);
 int decode_url(char *s);
-char *detecta_interface_std_gw ();
+char *detecta_interface_std_gw(void);
 void parse_verbose (void *options);
 void parse_args_basico (void * options, char doc[], int* family);
 void *args_basico (int *argc, const char *argv[]);
@@ -94,8 +94,8 @@ uint32_t armazena_dados_s_buffer (sized_buffer *sbuf, void *dados, int32_t tam_d
 void libera_sized_buffer (sized_buffer *sbuf);
 void limpa_sized_buffer (sized_buffer *sbuf);
 sized_buffer* gera_md5 (sized_buffer *sbuf);
-uint64_t get_rand_i ();
-char *obtem_versao ();
+uint64_t get_rand_i(void);
+char *obtem_versao(void);
 char *obtem_modelo (int *pc);
 int cria_arquivo_temporario (char *template_str);
 int escreve_arquivo_nome (char *nome_arq, char *conteudo, int size, char *modo);
