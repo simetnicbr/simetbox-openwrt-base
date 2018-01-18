@@ -31,9 +31,9 @@ WARNINGCFLAGS=" -Wmissing-prototypes -Wstrict-prototypes -Wmissing-declarations 
  -Wold-style-declaration  -Wmissing-parameter-type -Wunused-but-set-parameter\
  -Waddress -Warray-bounds -Wchar-subscripts -Wenum-compare -Wimplicit-function-declaration -Wmissing-braces
  -Wpointer-sign -Wreorder -Wreturn-type -Wsequence-point -Wcomment -Wformat -Wmain \
- -Wstrict-aliasing -Wstrict-overflow=1 -Wswitch -Wtrigraphs\
+ -Wstrict-aliasing -Wstrict-overflow=1 -Wswitch -Wtrigraphs -Wstack-usage=16384 \
  -Wunknown-pragmas -Wunused-function -Wunused-label -Wunused-value -Wvolatile-register-var -Wuninitialized -Waddress  "
-AC_ARG_ENABLE(debug, [--enable-debug turn -g on and off], CFLAGS="$CFLAGS -ggdb3 -O0", CFLAGS="$CFLAGS -DNDEBUG -Os -ffunction-sections -fdata-sections")
+AC_ARG_ENABLE(debug, [--enable-debug turn -g on and off], CFLAGS="$CFLAGS -ggdb3 -O0 -fstack-usage", CFLAGS="$CFLAGS -DNDEBUG -Os -ffunction-sections -fdata-sections")
 #AC_ARG_ENABLE(debug, [--enable-debug turn -g on and off], CFLAGS="$CFLAGS -ggdb3 -O0", CFLAGS="$CFLAGS -DNDEBUG -O0 -ggdb3")
 AC_ARG_ENABLE(trace, [--enable-trace turn trace prints off], CFLAGS="$CFLAGS", CFLAGS="$CFLAGS -DNTRACE")
 AC_ARG_ENABLE(morewarnings, [--enable-morewarnings turn compilation warnings on], CFLAGS="$CFLAGS $WARNINGCFLAGS", CFLAGS="$CFLAGS")
