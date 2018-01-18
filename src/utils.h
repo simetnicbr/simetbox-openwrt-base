@@ -7,6 +7,10 @@
 	Stevens 1993 - see BecomeDaemonProcess() */
 #define OPEN_MAX_GUESS 256
 
+/* Minimum thread stack size we need, do not make this
+ * less than 256KiB, must be a multiple of 4KiB */
+#define THREAD_STACK_DESIRED 262144
+
 #define BITMASK(b) (128 >> ((b) % CHAR_BIT))
 #define BITSLOT(b) ((b) / CHAR_BIT)
 #define BITTEST(a, b) ((a)[BITSLOT(b)] & BITMASK(b))

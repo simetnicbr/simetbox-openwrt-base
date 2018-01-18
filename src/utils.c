@@ -927,14 +927,24 @@ int escreve_arquivo_fd (int fd, char *conteudo, int size) {
 
 int meu_pthread_create (pthread_t *thread, size_t tam_stack_thread, void *(*start_routine) (void *), void *arg) {
 	pthread_attr_t attrs;
-	pthread_attr_init (&attrs);
-	if (tam_stack_thread >= PTHREAD_STACK_MIN)
-		pthread_attr_setstacksize (&attrs, tam_stack_thread);
-	else
-		ERROR_PRINT ("tamanho de pilha deve ser maior que PTHREAD_STACK_MIN: %d", PTHREAD_STACK_MIN);
-	pthread_attr_getstacksize (&attrs, &tam_stack_thread);
 
-	return pthread_create (thread, &attrs, start_routine, arg);
+	/*
+	 * Trying to be economic here is really, really asking for
+	 * trouble.  We regressed horribly from OpenWRT 15.05->17.01->[18.01]
+	 * because of this, just due to MUSL, libssl and system environment using
+	 * more stack (no SIMET code changes)...
+	 *
+	 * MUSL default : ~96KiB at the time of this writing.
+	 * glibc default: 2MiB or 8MiB.
+	 */
+	if (tam_stack_thread < THREAD_STACK_DESIRED)
+		tam_stack_thread = THREAD_STACK_DESIRED;
+
+	pthread_attr_init(&attrs);
+	if (pthread_attr_setstacksize(&attrs, tam_stack_thread))
+		ERROR_PRINT ("internal error: thread stack size %zu should have been larger than PTHREAD_STACK_MIN (%zu)", tam_stack_thread, PTHREAD_STACK_MIN);
+
+	return pthread_create(thread, &attrs, start_routine, arg);
 }
 
 
