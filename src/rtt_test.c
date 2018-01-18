@@ -72,7 +72,7 @@ int rtt_test(Simet_server_info_t * serverinfo, FILE * output, int family)
 		TRACE_PRINT("status = %d\n", status);
 		return status;
 	}
-	meu_pthread_create(&reciever_thread, PTHREAD_STACK_MIN * 2, udp_receive_counters_callback, &param_r);
+	meu_pthread_create(&reciever_thread, 0, udp_receive_counters_callback, &param_r);
 	gettimeofday(&tv_ini, NULL);
 	tv_stop_test.tv_usec = tv_ini.tv_usec;
 	tv_stop_test.tv_sec = tv_ini.tv_sec + RTT_TEST_TOTAL_TIME_IN_SECONDS;

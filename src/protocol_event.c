@@ -370,7 +370,7 @@ int event_jitter_send_start_message(const Event_t *event, Context_t *context) {
 int event_start_jitter_download(const Event_t *event, Context_t *context) {
 	pthread_t test_thread;
 	TRACE_PRINT("event_start_jitter_download");
-	meu_pthread_create(&test_thread, PTHREAD_STACK_MIN * 2, jitter_download_test_wrapper, context);
+	meu_pthread_create(&test_thread, 0, jitter_download_test_wrapper, context);
 	pthread_detach(test_thread);
 	return 1;
 }
@@ -378,7 +378,7 @@ int event_start_jitter_download(const Event_t *event, Context_t *context) {
 int event_start_jitter_upload(const Event_t *event, Context_t *context) {
 	pthread_t test_thread;
 	TRACE_PRINT("event_start_jitteruploadtest");
-	meu_pthread_create(&test_thread, PTHREAD_STACK_MIN * 2, jitter_upload_test_wrapper, context);
+	meu_pthread_create(&test_thread, 0, jitter_upload_test_wrapper, context);
 	pthread_detach(test_thread);
 	return 1;
 }
@@ -410,7 +410,7 @@ int event_request_latency_download(const Event_t *event, Context_t *context) {
 
 	context->data = malloc(sizeof(struct latency_context_st));
 
-	meu_pthread_create(&test_thread, PTHREAD_STACK_MIN * 2, latency_download_test_wrapper, context);
+	meu_pthread_create(&test_thread, 0, latency_download_test_wrapper, context);
 	pthread_detach(test_thread);
 	sleep(1);
 
