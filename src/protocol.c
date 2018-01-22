@@ -58,6 +58,11 @@ int send_control_message(Simet_server_info_t * si, const message_t message) {
 	struct timeval tv_timeo;
 	fd_set writefds;
 
+	if (si->socket_control_fd < 0) {
+		ERROR_PRINT("trying to send_control_message on an illegal fd");
+		saida(1);
+	}
+
 	len = snprintf(buf, BUFSIZ, "%s=%s\r\n", message.field, message.content);
 
 //#ifdef  NDEBUG
@@ -112,6 +117,11 @@ static int readable_timeo(int fd, int sec) {
 
 int receive_control_message(Simet_server_info_t * si, char * buffer, int64_t max_len, char *file, int linha) {
 	int status = 0;
+
+	if (si->socket_control_fd < 0) {
+		ERROR_PRINT("trying to receive_control_message on an illegal fd");
+		return -1; /* failsafe */
+	}
 
 	if (readable_timeo(si->socket_control_fd, CONTROL_MESSAGE_TIMEOUT)){
 		status = SSL_read(si->ssl, buffer, max_len);
