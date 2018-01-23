@@ -22,6 +22,7 @@
 #include <linux/rtnetlink.h>
 #include <arpa/inet.h>
 #include <ifaddrs.h>
+#include <ctype.h>
 
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -1071,67 +1072,78 @@ int return_code (char *entrada, int size) {
 	return cod;
 }
 
+#define HTTP_CONTENT_LENGTH_HEADER "Content-Length:"
 char *parse_html (char *entrada, int64_t *tam, int64_t size_recv) {
-	char *aux, *htmlsize, *htmlcontent, *num, contentlen[]="Content-Length:";
-	int64_t size = 0;
-	int i, j;
+	char *aux, *htmlsize, *htmlcontent;
+	uint64_t size = 0;
 
-	if (!entrada)
-		saida (1);
-	if (!strnlen (entrada, 1))
-		return NULL;
-	htmlsize = strcasestr(entrada, contentlen);
-	if (htmlsize) {
-		htmlsize += strlen (contentlen);
-		aux = strstr(htmlsize, "\r\n");
-		if (aux) {
-			num = malloc (aux - htmlsize + 1);
-			if (!num) {
-				ERROR_PRINT ("%s\n", NAO_ALOCA_MEM);
-				saida (1);
-			}
-			strncpy (num, htmlsize, aux - htmlsize + 1);
-			size = atol (num);
-			free (num);
-		}
+	if (!entrada || !*entrada || size_recv <= 0)
+		goto exit_empty;
+
+	/* We support HTTP/1.0 and later. */
+	if (size_recv < 16 || strncmp(entrada, "HTTP/", 5) || !memchr(entrada, '\r', size_recv)) {
+		ERROR_PRINT("got non-http or partial response, aborting...");
+		saida(1);
 	}
-	else {
+
+	/* buffer is NOT guaranteed to have a NUL at the end, and dealing
+	 * with that on top of case-insensitive matching is way too annoying.
+	 * Overwrite the "HTTP/1.x 2xx CRLF" header with an aligned memmove */
+	size_recv -= 16;
+	if (size_recv <= 0)
+		goto exit_empty;
+	memmove(entrada, entrada + 16, size_recv);
+	entrada[size_recv] = '\0';  /* there is NOT an off-by-one here */
+
+	htmlsize = strcasestr(entrada, HTTP_CONTENT_LENGTH_HEADER);
+	if (htmlsize) {
+		/* We have a Content-Length header */
+		htmlsize += strlen(HTTP_CONTENT_LENGTH_HEADER);
+
+		errno = 0;
+		size = strtoul(htmlsize, &aux, 10);
+		if (!errno && aux != htmlsize && size < INT64_MAX) {
+			while (isblank(*aux))
+				aux++;
+			if (!*aux || strncmp(aux, "\r\n", 2))
+				size = 0; /* invalid */
+		} else {
+			size = 0; /* invalid */
+		}
+	} else {
+		/* No Content-Length means the size was defined by connection close */
 		htmlsize = entrada;
 	}
 
 	htmlcontent = strstr(htmlsize, "\r\n\r\n");
-	j = htmlsize - entrada;
-	if((htmlsize) && (j + 4 <= size_recv)){
-		htmlcontent += 4;
-		if (!size)
-			size = size_recv - j;
-		else if (size > size_recv - (entrada - htmlcontent)) {
-			// pegou size em content-lenght
-			INFO_PRINT ("tamanho recebido no cabecalho %"PRI64" maior que bytes recebidos %"PRI64"\n", size, size_recv);
-			saida (1);
-		}
-
-/*		aux = (char*) malloc (size + 1);
-		if (!aux) {
-			ERROR_PRINT ("Impossivel alocar memoria para conteudo da saida do Web Service. Abortando\n");
-			return NULL;
-		}
-		else {
-			memcpy (aux, htmlcontent, size);
-			aux[size] = '\0';
-			if (tam)
-				*tam = size;
-		}
-*/
-		for (i = 0, j = htmlcontent - entrada; i < size; i++, j++)
-			entrada [i] = entrada [j];
-		entrada [i] = '\0';
-		if (tam)
-			*tam = size;
+	if (!htmlcontent) {
+		/* not HTTP/1 */
+		INFO_PRINT("got invalid http response, aborting...");
+		saida(1);
 	}
-	else return NULL;
+	htmlcontent += 4; /* skip \r\n\r\n */
 
+	if (size_recv - size < (htmlcontent - entrada)) {
+		INFO_PRINT("got partial response, aborting...");
+		saida(1);
+	}
+	if (!size)
+		size = size_recv - (htmlcontent - entrada);
+
+	/* remove http header(s) */
+	if (size < size_recv) {
+		memmove(entrada, htmlcontent, size);
+		entrada[size] = '\0'; /* NUL at the end */
+	}
+
+	if (tam)
+		*tam = size;
 	return entrada;
+
+exit_empty:
+	if (tam)
+		*tam = 0;
+	return NULL;
 }
 
 char *parse_html_put (char *entrada, int64_t *tam, int64_t size_recv) {
