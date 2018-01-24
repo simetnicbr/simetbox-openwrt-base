@@ -36,9 +36,11 @@ $(ifconfig | grep wlan$cont | grep HWaddr | awk '{print $5}')"
 		echo "$hash_mac_address" > /etc/config/hash
 	fi
 
+	# load in the release data
+	. /etc/openwrt_release
+
 	prefix=""
-	simetbox=`cat "/etc/openwrt_release" | grep "DISTRIB_ID" | cut -f 2 -d '=' | sed "s/['\"]//g"`
-	if [ "$simetbox" == "SIMETBOX" ] ; then
+	if test -n "${DISTRIB_ID}" && test "${DISTRIB_ID}" != "${DISTRIB_ID#SIMETBOX}" ; then
         	prefix="SIMETBOX-"
 	fi
 
