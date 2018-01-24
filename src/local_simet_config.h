@@ -45,6 +45,6 @@ typedef struct {
 
 
 
-CONFIG_SIMET* config_simet ();
-void libera_config (CONFIG_SIMET* config);
+CONFIG_SIMET* config_simet(void);
+void libera_config(CONFIG_SIMET* config);
 #endif

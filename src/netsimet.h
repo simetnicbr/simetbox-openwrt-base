@@ -126,11 +126,11 @@ char *get_local_ip(int socketfd);
  * @param socketfd
  * @return a malloc'd string
  */
-char * get_remote_ip(int socketfd);
+char *get_remote_ip(int socketfd);
 
 /**
  * For the given socket gets its local tcp or udp port
- * @param socket a connected socket.local: Av Prof Alfonso Bovero, 918/952
+ * @param socket a connected socket.
  */
 int get_local_port(int socket);
 
@@ -169,8 +169,8 @@ int recv_udp2(int socket_udp, uint64_t * counter, uint64_t * timestamp, uint64_t
  * Connects to an already connected socket creating a ssl
  * connection.
  */
-SSL * connect_ssl(int socket_fd, SSL_CTX* ctx);
-SSL * connect_ssl_bio(int socket_fd, SSL_CTX* ctx);
+SSL *connect_ssl(int socket_fd, SSL_CTX* ctx);
+SSL *connect_ssl_bio(int socket_fd, SSL_CTX* ctx);
 
 struct rtp_packet {
     uint16_t dummy1;
@@ -207,7 +207,7 @@ typedef struct {
 
 int convert_family_type(int family);
 int ip_type_family(char *ip);
-char* get_ip_by_host(const char* host, int family);
+char *get_ip_by_host(const char* host, int family);
 void fill_socket_addr(struct sockaddr_storage*, const char* host, int port, int family);
 
 
@@ -216,7 +216,7 @@ void decode_pac(union packetudp_u pac, uint64_t * counter, uint64_t * timestamp,
 
 ssize_t recv_timeout(int sockfd, char *buffer, uint8_t buffer_size, uint8_t timeout);
 
-char * get_local_macaddress();
+char *get_local_macaddress(void);
 
 char *recebe_resposta (int sock, int64_t *size_recv, uint8_t para_em_barra_r_barra_n);
 

@@ -170,7 +170,7 @@ void do_events_loop(Context_t * context) {
 		}
 
 		if (pthread_mutex_lock(&(context->mutex)) == 0){
-			meu_pthread_create(&reciever_thread, PTHREAD_STACK_MIN * 2, recieve_and_handle_message, &receiver_args);
+			meu_pthread_create(&reciever_thread, 0, recieve_and_handle_message, &receiver_args);
 			pthread_detach(reciever_thread);
 		}
 
