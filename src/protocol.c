@@ -141,9 +141,21 @@ int receive_control_message(Simet_server_info_t * si, char * buffer, int64_t max
 
 static void *dipatch_events(void *args_pt) {
 	struct event_dispatcher_args_st *args = (struct event_dispatcher_args_st *) args_pt;
+	int status;
+
 	args->c->queue_head++;
-	args->e->dispatcher(args->e, args->c);
+	status = args->e->dispatcher(args->e, args->c);
+	if (status < 0) {
+		ERROR_PRINT("protocol event handler returned error status %d", status);
+		/* FIXME: what now?! */
+		saida(1);
+	} else {
+		TRACE_PRINT("protocol event handler returned status %d", status);
+	}
+
 	free(args->e);
+	args->e = NULL;
+
 	return args_pt;
 }
 
@@ -170,7 +182,7 @@ void do_events_loop(Context_t * context) {
 	while (1){
 		if (context->queue_head < context->queue_tail){
 			dispathcer_args.e = context->queue[context->queue_head];
-			if (dispathcer_args.e->action == DISPATCH){
+			if (dispathcer_args.e->action == DISPATCH) {
 				dipatch_events(&dispathcer_args);
 			} else if (dispathcer_args.e->action == END_LOOP){
 				TRACE_PRINT("e->action:%s", "END_LOOP");
