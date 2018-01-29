@@ -333,12 +333,18 @@ int main_simet_client (const char *nome, char *mac_address, int argc, const char
 
 		if (arguments.simet_server != NULL) {
 			context->serverinfo = malloc(sizeof(Simet_server_info_t));
+			if (!context->serverinfo) {
+				ERROR_PRINT("could not allocate memory for server_info");
+				saida(1);
+			}
+			memset(context->serverinfo, sizeof(Simet_server_info_t), 0);
+
 			context->serverinfo->address_text = strdup(arguments.simet_server);
 			context->serverinfo->location = strdup("São Paulo - SP");
 			context->serverinfo->id_pool_server = 3;
 			context->serverinfo->description = NULL;
-		}
-		else {
+			context->serverinfo->next = NULL;
+		} else {
 			if (get_simet_servers(config->host, config->context_root, config->port, arguments.location_server, &context->serverinfo, context->family, ssl_ctx) == 0) {
 				INFO_PRINT ("Sem servidores para a familia %d\n", context->family);
 				saida (1);

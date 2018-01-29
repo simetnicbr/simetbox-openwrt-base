@@ -38,35 +38,46 @@
 
 
 
-static int parse_server_info(json_object *jvalue, Simet_server_info_t ** server_info)
+static void parse_server_info(json_object *jvalue, Simet_server_info_t ** server_info)
 {
 	Simet_server_info_t *si;
 	json_object *aux;
 	*server_info = calloc(1, sizeof(Simet_server_info_t));
+	if (!*server_info) {
+		ERROR_PRINT("failed to allocate memory for server info");
+		saida(1);
+	}
+
 	si = *server_info;
-
-	if (!json_object_object_get_ex (jvalue, "description", &aux))
-		return 0;
-	si->description = strdup (json_object_get_string(aux));
-	if (!json_object_object_get_ex (jvalue, "location", &aux))
-		return 0;
-	si->location = strdup (json_object_get_string(aux));
-	if (!json_object_object_get_ex (jvalue, "address", &aux))
-		return 0;
-	si->address_text = strdup (json_object_get_string(aux));
-	if (!json_object_object_get_ex (jvalue, "priority", &aux))
-		return 0;
-	si->priority = json_object_get_int(aux);
-	if (!json_object_object_get_ex (jvalue, "idPoolServer", &aux))
-		return 0;
-	si->id_pool_server = json_object_get_int(aux);
-
-	INFO_PRINT ("location: %s, address_text: %s, id_pool_server: %d, priority: %d, description: %s", si->location, si->address_text, si->id_pool_server, si->priority, si->description);
-
 	si->rtt = INTMAX_MAX;
 	si->socket_control_fd = -1;
 	si->next = NULL;
-	return 1;
+
+	if (!json_object_object_get_ex(jvalue, "description", &aux))
+		si->description = strdup("desconhecida/unknown");
+	else
+		si->description = strdup(json_object_get_string(aux));
+	if (!json_object_object_get_ex(jvalue, "location", &aux))
+		si->location = strdup("desconhecida/unknown");
+	else
+		si->location = strdup(json_object_get_string(aux));
+
+	if (!json_object_object_get_ex(jvalue, "address", &aux))
+		si->address_text = strdup("desconhecida/unknown");
+	else
+		si->address_text = strdup(json_object_get_string(aux));
+
+	if (!json_object_object_get_ex(jvalue, "priority", &aux))
+		si->priority = strdup("desconhecida/unknown");
+	else
+		si->priority = json_object_get_int(aux);
+
+	if (!json_object_object_get_ex(jvalue, "idPoolServer", &aux))
+		si->id_pool_server = strdup("desconhecida/unknown");
+	else
+		si->id_pool_server = json_object_get_int(aux);
+
+	INFO_PRINT ("location: %s, address_text: %s, id_pool_server: %d, priority: %d, description: %s", si->location, si->address_text, si->id_pool_server, si->priority, si->description);
 }
 
 int parse_result_servers_parallel (json_object *jobj, Simet_server_info_t ** cabeca, int family) {
@@ -81,6 +92,7 @@ int parse_result_servers_parallel (json_object *jobj, Simet_server_info_t ** cab
     fd_set rset, rsetmaster;
 	struct timeval tv_timeo;
 	struct timespec ts;
+
 	INFO_PRINT ("Escolha Servidor\n");
 	next = cabeca;
 	arraylen_final = arraylen = json_object_array_length(jarray); /*Getting the length of the array*/
@@ -177,19 +189,23 @@ int parse_result_servers_parallel (json_object *jobj, Simet_server_info_t ** cab
 		}
 	}
 
+	*next = NULL;
 	for (i = 0; i < arraylen; i++) {
 		si = vetor[i];
 		if (num_ping[i] == 0) {
 			INFO_PRINT ("liberando servidor simet de descricao: %s\n", si->description);
 			free_server_infos_list(si);
-			arraylen_final --;
-		}
-		else {
+			arraylen_final--;
+		} else if (si) {
 			*next = si;
 			next = &((*next)->next);
+			*next = NULL;
 			if (num_ping[i] > 0)
 				si->rtt = mediana (tempos_ping[i], num_ping[i] - 1);
 			INFO_PRINT ("server [%s]: num_ping: %d, mediana = %"PRUI64", prioridade: %d", si->description, num_ping[i], si->rtt, si->priority);
+		} else {
+			/* huh? */
+			arraylen_final--;
 		}
 		if (socket_array[i] > 0) {
 			close (socket_array[i]);
@@ -212,6 +228,8 @@ int parse_result_servers_parallel (json_object *jobj, Simet_server_info_t ** cab
 	return arraylen_final;
 }
 
+#if 0
+/* this is broken */
 int parse_result_servers (json_object *jobj, Simet_server_info_t ** cabeca, int family) {
 	int arraylen, i, arraylen_final;
 	void json_parse(json_object * jobj); /*Forward Declaration*/
@@ -243,6 +261,7 @@ int parse_result_servers (json_object *jobj, Simet_server_info_t ** cabeca, int 
 	}
 	return arraylen_final;
 }
+#endif
 
 static int cmp_simet_server_info(const void *p1, const void *p2)
 {
