@@ -22,6 +22,7 @@
 #include <linux/rtnetlink.h>
 #include <arpa/inet.h>
 #include <ifaddrs.h>
+#include <ctype.h>
 
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -223,41 +224,36 @@ int connect_tcp(const char *host, const char *port, int family, int *sock) {
 	bzero(&local_hints, sizeof(struct addrinfo));
 	local_hints.ai_socktype = SOCK_STREAM;
 	local_hints.ai_flags = AI_CANONNAME;
-
 	local_hints.ai_family = convert_family_type(family);
-
 
 	if ((n = getaddrinfo(host, port, &local_hints, &res)) != 0) {
 		ERRNO_PRINT("connect_tcp erro #%d para %s, %s, %d: %s\n", n, host, port, family, gai_strerror(n));
 		return n;
 	}
-	for (num_reg = 0, temp = res; temp != NULL; temp = temp->ai_next) {
+
+	/* start res at a random point in the getaddrinfo result */
+	/* Note: MUSL wants us to treat (struct addrinfo)->ai_next as const! */
+	ressave = res; /* res is !NULL by getaddrinfo semanthics */
+	num_reg = 0;
+	while (res) {
 		num_reg++;
-//		ip = get_ip (temp->ai_addr);
-//		INFO_PRINT ("%s", ip);
-//		free (ip);
-		if ((num_reg > 1) && (temp->ai_next == NULL)) {
-			temp2 = temp;
-			temp->ai_next = res;
-			break;
-		}
+		res = res->ai_next;
 	}
-	if (num_reg > 1) {
-		num_shift = get_rand_i() % num_reg;
-//		INFO_PRINT ("shift: %d\n", num_shift);
-		for (i = 0, temp = res; i < num_shift; temp2 = temp, temp = temp->ai_next, i++);
-		temp2->ai_next = NULL;
-		ressave = res = temp;
+	num_shift = get_rand_i() % num_reg;
+	INFO_PRINT("connect_tcp: starting at getaddrinfo() element %d of %d", num_shift, num_reg);
+	res = ressave;
+	while (num_shift > 0 && res->ai_next) {
+		res = res->ai_next;
+		num_shift--;
 	}
-	else ressave = res;
 
-
-//	for (temp = res; temp != NULL; temp = temp->ai_next) {
-//		ip = get_ip (temp->ai_addr);
-//		INFO_PRINT ("%s", ip);
-//		free (ip);
-//	}
-	do {
+	conectou = 0;
+	while (!conectou && num_reg > 0) {
+		/* move to next element, we will get to the initial element for last */
+		num_reg--;
+		res = res->ai_next;
+		if (!res) /* warp-around */
+			res = ressave;
 
 		sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 		if (sockfd < 0){
@@ -280,8 +276,8 @@ int connect_tcp(const char *host, const char *port, int family, int *sock) {
 		tval.tv_sec = TIMEOUT;
 		tval.tv_usec = 0;
 		clock_gettime(CLOCK_MONOTONIC, &ts_ini);
-		ip = get_ip (res->ai_addr);
 
+		ip = get_ip (res->ai_addr);
 		INFO_PRINT ("conectando a %s:%s... ", ip, port);
 		free (ip);
 
@@ -334,7 +330,7 @@ int connect_tcp(const char *host, const char *port, int family, int *sock) {
 			continue;
 
 		}
-	} while ((!conectou) && ((res = res->ai_next) != NULL));
+	}
 
 	if (!conectou) {
 		ERROR_PRINT ("connect_tcp error for %s, %s, familia:%d", host, port, family);
@@ -348,11 +344,12 @@ int connect_tcp(const char *host, const char *port, int family, int *sock) {
 	else {
 		INFO_PRINT ("conectado");
 	}
-	freeaddrinfo(ressave);
 
+	freeaddrinfo(ressave);
 	*sock = sockfd;
 	return *sock;
 }
+
 int converte_str_ip (const char *host, void *addr) {
 	int n;
 	struct addrinfo local_hints, *res;
@@ -1075,67 +1072,78 @@ int return_code (char *entrada, int size) {
 	return cod;
 }
 
+#define HTTP_CONTENT_LENGTH_HEADER "Content-Length:"
 char *parse_html (char *entrada, int64_t *tam, int64_t size_recv) {
-	char *aux, *htmlsize, *htmlcontent, *num, contentlen[]="Content-Length:";
-	int64_t size = 0;
-	int i, j;
+	char *aux, *htmlsize, *htmlcontent;
+	uint64_t size = 0;
 
-	if (!entrada)
-		saida (1);
-	if (!strnlen (entrada, 1))
-		return NULL;
-	htmlsize = strcasestr(entrada, contentlen);
-	if (htmlsize) {
-		htmlsize += strlen (contentlen);
-		aux = strstr(htmlsize, "\r\n");
-		if (aux) {
-			num = malloc (aux - htmlsize + 1);
-			if (!num) {
-				ERROR_PRINT ("%s\n", NAO_ALOCA_MEM);
-				saida (1);
-			}
-			strncpy (num, htmlsize, aux - htmlsize + 1);
-			size = atol (num);
-			free (num);
-		}
+	if (!entrada || !*entrada || size_recv <= 0)
+		goto exit_empty;
+
+	/* We support HTTP/1.0 and later. */
+	if (size_recv < 16 || strncmp(entrada, "HTTP/", 5) || !memchr(entrada, '\r', size_recv)) {
+		ERROR_PRINT("got non-http or partial response, aborting...");
+		saida(1);
 	}
-	else {
+
+	/* buffer is NOT guaranteed to have a NUL at the end, and dealing
+	 * with that on top of case-insensitive matching is way too annoying.
+	 * Overwrite the "HTTP/1.x 2xx CRLF" header with an aligned memmove */
+	size_recv -= 16;
+	if (size_recv <= 0)
+		goto exit_empty;
+	memmove(entrada, entrada + 16, size_recv);
+	entrada[size_recv] = '\0';  /* there is NOT an off-by-one here */
+
+	htmlsize = strcasestr(entrada, HTTP_CONTENT_LENGTH_HEADER);
+	if (htmlsize) {
+		/* We have a Content-Length header */
+		htmlsize += strlen(HTTP_CONTENT_LENGTH_HEADER);
+
+		errno = 0;
+		size = strtoul(htmlsize, &aux, 10);
+		if (!errno && aux != htmlsize && size < INT64_MAX) {
+			while (isblank(*aux))
+				aux++;
+			if (!*aux || strncmp(aux, "\r\n", 2))
+				size = 0; /* invalid */
+		} else {
+			size = 0; /* invalid */
+		}
+	} else {
+		/* No Content-Length means the size was defined by connection close */
 		htmlsize = entrada;
 	}
 
 	htmlcontent = strstr(htmlsize, "\r\n\r\n");
-	j = htmlsize - entrada;
-	if((htmlsize) && (j + 4 <= size_recv)){
-		htmlcontent += 4;
-		if (!size)
-			size = size_recv - j;
-		else if (size > size_recv - (entrada - htmlcontent)) {
-			// pegou size em content-lenght
-			INFO_PRINT ("tamanho recebido no cabecalho %"PRI64" maior que bytes recebidos %"PRI64"\n", size, size_recv);
-			saida (1);
-		}
-
-/*		aux = (char*) malloc (size + 1);
-		if (!aux) {
-			ERROR_PRINT ("Impossivel alocar memoria para conteudo da saida do Web Service. Abortando\n");
-			return NULL;
-		}
-		else {
-			memcpy (aux, htmlcontent, size);
-			aux[size] = '\0';
-			if (tam)
-				*tam = size;
-		}
-*/
-		for (i = 0, j = htmlcontent - entrada; i < size; i++, j++)
-			entrada [i] = entrada [j];
-		entrada [i] = '\0';
-		if (tam)
-			*tam = size;
+	if (!htmlcontent) {
+		/* not HTTP/1 */
+		INFO_PRINT("got invalid http response, aborting...");
+		saida(1);
 	}
-	else return NULL;
+	htmlcontent += 4; /* skip \r\n\r\n */
 
+	if (size_recv - size < (htmlcontent - entrada)) {
+		INFO_PRINT("got partial response, aborting...");
+		saida(1);
+	}
+	if (!size)
+		size = size_recv - (htmlcontent - entrada);
+
+	/* remove http header(s) */
+	if (size < size_recv) {
+		memmove(entrada, htmlcontent, size);
+		entrada[size] = '\0'; /* NUL at the end */
+	}
+
+	if (tam)
+		*tam = size;
 	return entrada;
+
+exit_empty:
+	if (tam)
+		*tam = 0;
+	return NULL;
 }
 
 char *parse_html_put (char *entrada, int64_t *tam, int64_t size_recv) {

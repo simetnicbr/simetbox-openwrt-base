@@ -1087,7 +1087,7 @@ int main_uptime (const char *nome, char *mac_address, int argc, const char* argv
     }
 
 
-	status = meu_pthread_create(&sig_thread_id, PTHREAD_STACK_MIN * 1.5, thread_trata_sinais_uptime, (void*)&signal_arg);
+	status = meu_pthread_create(&sig_thread_id, 0, thread_trata_sinais_uptime, (void*)&signal_arg);
     if (status != 0) {
         ERROR_PRINT("can't create thread\n");
         saida (1);
@@ -1101,7 +1101,7 @@ int main_uptime (const char *nome, char *mac_address, int argc, const char* argv
 	}
 
 
-	status = meu_pthread_create(&pingando_id, PTHREAD_STACK_MIN * 1.5, pinga_nic_br, (void*)&ping_arg);
+	status = meu_pthread_create(&pingando_id, 0, pinga_nic_br, (void*)&ping_arg);
 	if (status != 0) {
 		ERROR_PRINT("can't create thread\n");
 		saida (1);
@@ -1186,7 +1186,7 @@ int main_uptime (const char *nome, char *mac_address, int argc, const char* argv
 
 				// conectou agora
 				control->connected = control->envia_id = 1;
-				status = meu_pthread_create(&envia_cep_e_hash_id, PTHREAD_STACK_MIN * 1.5, envia_cep_e_hash, NULL);
+				status = meu_pthread_create(&envia_cep_e_hash_id, 0, envia_cep_e_hash, NULL);
 				if (status != 0) {
 					ERROR_PRINT("falha ao criar thread\n");
 					saida (1);

@@ -215,7 +215,7 @@ int main ( int argc , const char *argv[]) {
 	if (needsWatchdog(execType)) {
 		// para o uptime o watchdog nao deve ser ativado
 		INFO_PRINT("start watchdog");
-		meu_pthread_create(&thread_watchdog, PTHREAD_STACK_MIN * 1.125, watchdog, NULL);
+		meu_pthread_create(&thread_watchdog, 0, watchdog, NULL);
 		pthread_detach(thread_watchdog);
 	}
 

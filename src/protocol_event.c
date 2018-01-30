@@ -43,36 +43,38 @@ const char * SIMET_DEFAULT_PORT = "16000";
 /* GENERAL ******************************************/
 int event_start_control_connection(const Event_t *event, Context_t *context) {
 	Simet_server_info_t * node;
-	int status = 0, option = 1, *sock;
-	
+	int status_ok = 0, option = 1;
+
 	do {
 		if (context->serverinfo->description)
 			INFO_PRINT("Conectando ao servidor: %s", context->serverinfo->description);
-		sock = &(context->serverinfo->socket_control_fd);
-		if(!(status = connect_tcp(context->serverinfo->address_text, SIMET_DEFAULT_PORT, 0, sock))) {
-			node = context->serverinfo->next;
-			free_server_info(context->serverinfo);
-			context->serverinfo = node;
+
+		if (connect_tcp(context->serverinfo->address_text, SIMET_DEFAULT_PORT, 0,
+				&(context->serverinfo->socket_control_fd)) >= 0) {
+			free(context->serverinfo->address_text);
+			context->serverinfo->address_text = get_remote_ip(context->serverinfo->socket_control_fd);
+		//	context->ssl_ctx = init_ssl_context();
+			setsockopt(context->serverinfo->socket_control_fd, SOL_SOCKET, MSG_NOSIGNAL, (void *)&option, sizeof(int));
+			context->serverinfo->ssl = connect_ssl_bio(context->serverinfo->socket_control_fd, context->ssl_ctx);
+			/* socket will have been closed by connect_ssl_bio on failure */
+			if (context->serverinfo->ssl) {
+				status_ok = 1;
+			} else {
+				INFO_PRINT ("nao conseguiu ssl");
+			}
+		} else {
 			INFO_PRINT ("nao conseguiu tcp connect");
-			continue;
 		}
 
-		free(context->serverinfo->address_text);
-		context->serverinfo->address_text = get_remote_ip(*sock);
-	//	context->ssl_ctx = init_ssl_context();
-		setsockopt(context->serverinfo->socket_control_fd, SOL_SOCKET, MSG_NOSIGNAL, (void *)&option, sizeof(int));
-		context->serverinfo->ssl = connect_ssl_bio(
-				context->serverinfo->socket_control_fd, context->ssl_ctx);
-		if (!context->serverinfo->ssl) {
+		if (!status_ok) {
 			node = context->serverinfo->next;
 			free_server_info(context->serverinfo);
 			context->serverinfo = node;
-			INFO_PRINT ("nao conseguiu ssl");
-			continue;
+			TRACE_PRINT(node ? "trying next node" : "no more nodes to try, failed.");
 		}
-	} while ((!status) && (context->serverinfo != NULL) && (context->serverinfo->ssl != NULL));
-	
-	return status;
+	} while (!status_ok && context->serverinfo != NULL);
+
+	return (status_ok)? 1 : -ENOTCONN;
 }
 
 int event_request_server(const Event_t *event, Context_t *context) {
@@ -370,7 +372,7 @@ int event_jitter_send_start_message(const Event_t *event, Context_t *context) {
 int event_start_jitter_download(const Event_t *event, Context_t *context) {
 	pthread_t test_thread;
 	TRACE_PRINT("event_start_jitter_download");
-	meu_pthread_create(&test_thread, PTHREAD_STACK_MIN * 2, jitter_download_test_wrapper, context);
+	meu_pthread_create(&test_thread, 0, jitter_download_test_wrapper, context);
 	pthread_detach(test_thread);
 	return 1;
 }
@@ -378,7 +380,7 @@ int event_start_jitter_download(const Event_t *event, Context_t *context) {
 int event_start_jitter_upload(const Event_t *event, Context_t *context) {
 	pthread_t test_thread;
 	TRACE_PRINT("event_start_jitteruploadtest");
-	meu_pthread_create(&test_thread, PTHREAD_STACK_MIN * 2, jitter_upload_test_wrapper, context);
+	meu_pthread_create(&test_thread, 0, jitter_upload_test_wrapper, context);
 	pthread_detach(test_thread);
 	return 1;
 }
@@ -410,7 +412,7 @@ int event_request_latency_download(const Event_t *event, Context_t *context) {
 
 	context->data = malloc(sizeof(struct latency_context_st));
 
-	meu_pthread_create(&test_thread, PTHREAD_STACK_MIN * 2, latency_download_test_wrapper, context);
+	meu_pthread_create(&test_thread, 0, latency_download_test_wrapper, context);
 	pthread_detach(test_thread);
 	sleep(1);
 

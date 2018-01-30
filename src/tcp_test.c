@@ -238,7 +238,7 @@ int tcp_download_test(Context_t *context) {
 
 
 
-	status = meu_pthread_create(&sig_thread_id, PTHREAD_STACK_MIN * 2, thread_trata_sinais_vazao, (void*)&signal_arg);
+	status = meu_pthread_create(&sig_thread_id, 0, thread_trata_sinais_vazao, (void*)&signal_arg);
     if (status != 0) {
         ERROR_PRINT("can't create thread\n");
         saida (1);
@@ -557,7 +557,7 @@ int tcp_upload_test(Context_t *context) {
 	sigaddset(&mask, SIGPIPE);
 
 
-	status = meu_pthread_create(&sig_thread_id, PTHREAD_STACK_MIN * 2, thread_trata_sinais_vazao, (void*)&signal_arg);
+	status = meu_pthread_create(&sig_thread_id, 0, thread_trata_sinais_vazao, (void*)&signal_arg);
     if (status != 0) {
         ERROR_PRINT("can't create thread\n");
         saida (1);
