@@ -23,7 +23,6 @@
 #include "simet_dns_ping_traceroute.h"
 #include "simet_porta25.h"
 #include "simet_tools.h"
-#include "simet_uptime.h"
 #include "simet_client.h"
 #include "simet_bcp38.h"
 #include "simet_ws.h"
@@ -64,9 +63,6 @@ int getExecutableType(const char* name)
 	}
 	else if (strcmp(name, "simet_bcp38") == 0) {
 		type = SIMET_BCP38;
-	}
-	else if (strcmp(name, "simet_uptime") == 0) {
-		type = SIMET_UPTIME;
 	}
 	else if (strcmp(name, "simet_ws") == 0) {
 		type = SIMET_WS;
@@ -171,9 +167,6 @@ int main ( int argc , const char *argv[]) {
 		case SIMET_BCP38:
 			main_func = main_bcp38;
 			break;
-		case SIMET_UPTIME:
-			main_func = main_uptime;
-			break;
 		case SIMET_ALEXA:
 			main_func = main_alexa;
 			break;
@@ -185,7 +178,7 @@ int main ( int argc , const char *argv[]) {
 			main_func = main_content;
 			break;
 		default:
-			printf ("o simet_tools deve ser utilizado pelas ferramentas:\n\tsimet_alexa;\n\tsimet_bcp38;\n\tsimet_client;\n\tsimet_content_provider;\n\tsimet_dns;\n\tsimet_dns_ping_traceroute;\n\tsimet_ntpq;\n\tsimet_porta25;\n\tsimet_uptime;\n\tsimet_ws.");
+			printf ("o simet_tools deve ser utilizado pelas ferramentas:\n\tsimet_alexa;\n\tsimet_bcp38;\n\tsimet_client;\n\tsimet_content_provider;\n\tsimet_dns;\n\tsimet_dns_ping_traceroute;\n\tsimet_ntpq;\n\tsimet_porta25;\n\tsimet_ws.");
 			return 0;
 		break;
 	}

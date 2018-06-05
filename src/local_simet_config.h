@@ -8,8 +8,6 @@ typedef struct {
 	char *context_optional;
 	char *context_web_persistence;
 	char *context_web_persistence_optional;
-	char *host_uptime;
-	char *port_uptime;
 	char *dns_autoritativo;
 	char *sufixo_dns_autoritativo;
 	char *bcp38_server;
@@ -24,8 +22,6 @@ typedef struct {
 	int num_pre_ttl_queries_per_round;
 	int pre_ttl_rounds_interval;
 	int pre_ttl_value;
-	int uptime_heartbeat_interval;
-	int uptime_timeout_heartbeat;
 	int mensagens_erro_ssl;
 	int bcp38_src_port;
 	int bcp38_dest_port;
