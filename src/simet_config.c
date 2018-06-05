@@ -75,10 +75,6 @@ void libera_config (CONFIG_SIMET* config) {
 			free (config->context_web_persistence);
 		if (config->context_web_persistence_optional)
 			free (config->context_web_persistence_optional);
-		if (config->host_uptime)
-			free (config->host_uptime);
-		if (config->port_uptime)
-			free (config->port_uptime);
 		if (config->dns_autoritativo)
 			free (config->dns_autoritativo);
 		if (config->sufixo_dns_autoritativo)
@@ -134,12 +130,6 @@ void libera_config (CONFIG_SIMET* config) {
 			}
 			else if ((!config_simet->context_web_persistence_optional) && (strcmp (key, "cf_simet_web_persistence_optional") == 0)) {
 				config_simet->context_web_persistence_optional = strdup (value);
-			}
-			else if ((!config_simet->host_uptime) && (strcmp (key, "cf_host_uptime") == 0)) {
-				config_simet->host_uptime = strdup (value);
-			}
-			else if ((!config_simet->port_uptime) && (strcmp (key, "cf_port_uptime") == 0)) {
-				config_simet->port_uptime = strdup (value);
 			}
 			else if ((!config_simet->num_intra_ttl_queries) && (strcmp (key, "cf_num_intra_ttl_queries") == 0)) {
 				config_simet->num_intra_ttl_queries = atoi (value);
@@ -231,12 +221,6 @@ CONFIG_SIMET* config_simet () {
 			else if ((!config_simet->context_web_persistence_optional) && (strcmp (key, "cf_simet_web_persistence_optional") == 0)) {
 				config_simet->context_web_persistence_optional = strdup (value);
 			}
-			else if ((!config_simet->host_uptime) && (strcmp (key, "cf_host_uptime") == 0)) {
-				config_simet->host_uptime = strdup (value);
-			}
-			else if ((!config_simet->port_uptime) && (strcmp (key, "cf_port_uptime") == 0)) {
-				config_simet->port_uptime = strdup (value);
-			}
 			else if ((!config_simet->dns_autoritativo) && (strcmp (key, "cf_dns_autoritativo") == 0)) {
 				config_simet->dns_autoritativo = strdup (value);
 			}
@@ -300,22 +284,6 @@ CONFIG_SIMET* config_simet () {
 				config_simet->pre_ttl_rounds_interval = atoi (value);
 				if (config_simet->pre_ttl_rounds_interval < 0) {
 					INFO_PRINT ("chave cf_pre_ttl_rounds_interval = %d, menor que zero", config_simet->pre_ttl_rounds_interval);
-					libera_config (config_simet);
-					return NULL;
-				}
-			}
-			else if ((!config_simet->uptime_heartbeat_interval) && (strcmp (key, "cf_uptime_heartbeat_interval") == 0)) {
-				config_simet->uptime_heartbeat_interval = atoi (value);
-				if (config_simet->uptime_heartbeat_interval <= 0) {
-					INFO_PRINT ("chave cf_uptime_heartbeat_interval = %d, menor ou igual a zero", config_simet->uptime_heartbeat_interval);
-					libera_config (config_simet);
-					return NULL;
-				}
-			}
-			else if ((!config_simet->uptime_timeout_heartbeat) && (strcmp (key, "cf_uptime_timeout_heartbeat") == 0)) {
-				config_simet->uptime_timeout_heartbeat = atoi (value);
-				if (config_simet->uptime_timeout_heartbeat < 0) {
-					INFO_PRINT ("chave cf_uptime_timeout_heartbeat = %d, menor ou igual a zero", config_simet->uptime_timeout_heartbeat);
 					libera_config (config_simet);
 					return NULL;
 				}

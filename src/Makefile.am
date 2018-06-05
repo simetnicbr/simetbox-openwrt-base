@@ -21,8 +21,6 @@ simet_tools_SOURCES  = base64.c \
 		simet_dns_ping_traceroute.c \
 		simet_porta25.h \
 		simet_porta25.c \
-		simet_uptime.h \
-		simet_uptime.c \
 		netsimet.c \
 		gopt.h \
 		jitter_test.h \

@@ -1,7 +1,0 @@
-#!/bin/sh
-sleep 90
-while [ true ]
-do
-	sleep 30
-	simet_uptime
-done
