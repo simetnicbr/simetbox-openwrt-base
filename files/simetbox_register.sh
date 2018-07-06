@@ -31,6 +31,6 @@ do
     # geolocalização de registro da caixa
     simet_geolocation.sh
   else
-    sleep 10
+    sleep 60
   fi
 done
