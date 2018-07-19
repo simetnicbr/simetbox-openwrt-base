@@ -297,7 +297,7 @@ fi
 rm -f "$TMPGEO"
 rm -f "$TMPGEOD"
 
-echo "SIMET geoapi: measurement location result: " $envia_geolocation
-echo "SIMET geoapi: device location result: " $envia_geolocation_d
+echo "SIMET geoapi: measurement location result: $envia_geolocation"
+echo "SIMET geoapi: device location result: $envia_geolocation_d"
 
 exit 0
