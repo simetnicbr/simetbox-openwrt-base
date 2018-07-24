@@ -232,22 +232,25 @@ else
 	while [ $cont -lt $total_radio ]
 	do
 		echo "cont: $cont"
-		radio_state_disabled=$(uci get wireless.radio$cont.disabled)
+		radio_state_disabled=$(uci -q get wireless.radio$cont.disabled)
+		radio_state_disabled=${radio_state_disabled:-0}
 		echo "radio_state_disabled: $radio_state_disabled"
 		if [ $radio_state_disabled == 1 ] ; then
 			uci set wireless.radio$cont.disabled=0
 			wifi
-			sleep 5
+			sleep 10
 		fi
-
-		mac_address="$mac_address
-$(iw wlan$cont scan | awk '/^BSS / {print $2}' | sed -e 's/(on//')"
-
+		scan=
+		for i in 1 2 3 4 5; do
+			[ -z "$scan" ] && scan=$(iw wlan$cont scan | awk '/^BSS / {print $2}' | sed -e 's/(on//')
+			[ -z "$scan" ] && sleep 5
+		done
 		if [ $radio_state_disabled == 1 ] ; then
 			uci set wireless.radio$cont.disabled=1
 			wifi
 		fi
-
+		mac_address="$mac_address
+$scan"
 		cont=$(expr $cont + 1)
 	done
 
