@@ -2,14 +2,11 @@
 
 . /lib/functions.sh
 
-# Works well on ar71xx/generic
-machine=$(sed -n -e '/^machine[[:blank:]]/ { s/[^:]\+:[[:blank:]]\+// ; s/[ ,;#$%&\!/]/_/g ; s/_\+/_/g ; p }' < /proc/cpuinfo)
-
-# shortcut, since we will need to load in json support otherwise
-if [ -n "$machine" ] ; then
-	echo $machine
+# internal openwrt API, but works from 12.09 to 18.06+
+[ -e /tmp/sysinfo/model ] && {
+	sed -e 's/[ ,;#$%&\!/]/_/g' -e 's/_\+/_/g' < /tmp/sysinfo/model
 	exit 0
-fi
+}
 
 # do it the hard (and expensive) way
 . /usr/share/libubox/jshn.sh
@@ -19,14 +16,20 @@ json_load "$(ubus call system board)" || {
 	exit 0
 }
 json_get_var boardname board_name
+json_get_var model model
 json_select release
 json_get_var target target
 
-if [ x"${target}${boardname}" != x ] ; then
-	machine=$(echo "${target}_${boardname}" | sed -e 's/[ ,;#$%&\!/]/_/g' -e 's/_\+/_/g')
+if [ -n "$model" ] ; then
+	machine="$model"
+elif [ -n "$boardname" ] ; then
+	[ -n "$target" ] && target="${target}_"
+	machine="${target}${boardname}"
+elif [ -n "$target" ] ; then
+	machine="$target"
 else
 	# catch-all, because things just don't work well when it is empty
 	machine="unknown"
 fi
 
-echo $machine
+echo "$machine" | sed -e 's/[ ,;#$%&\!/]/_/g' -e 's/_\+/_/g'
