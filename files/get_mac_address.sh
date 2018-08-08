@@ -12,7 +12,7 @@ case "$model" in
 	TP-LINK*TL-WR740ND|TP-LINK*TL-WR741N*V4|TP-LINK*TL-WR841N*V7|TP-LINK*TL-WR842N*V1)
 		mac_address=$(cat /sys/devices/pci0000:00/0000:00:00.0/ieee80211/phy0/macaddress)
 		;;
-	TP-LINK*TL-WDR3600/4300/4310)
+	TP-LINK*TL-WDR3600_V1|TP-LINK*TL-WDR4300_V1)
 		mac_address=$(cat /sys/devices/pci0000:00/0000:00:00.0/ieee80211/phy1/macaddress)
 		;;
 	*)
