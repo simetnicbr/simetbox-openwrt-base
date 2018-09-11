@@ -13,7 +13,6 @@
 # isso não é oficialmente documentado.
 GEOLOC_DIR=/tmp/simet_geo
 GEOLOC_CACHE="${GEOLOC_DIR}/simet_geolocation_cache"
-GEOLOC_LIMIT="${GEOLOC_DIR}/simet_geolocation_tries"
 
 . /etc/config/simet.conf
 [ -r /etc/config/simet-private.conf ] && . /etc/config/simet-private.conf
@@ -49,35 +48,6 @@ persist_geoloc_RAM() {
 }
 
 ##
-# log_daily_geolocs() - log we did a geoloc today
-#
-log_daily_geolocs() {
-	date -u +%Y%m%d >> "${GEOLOC_LIMIT}"
-}
-
-##
-# limit_daily_geolocs() - limita geolocations/dia
-#
-# retorna 0 se atingiu limite de geolocalizacoes
-#
-limit_daily_geolocs() {
-	[ -r "${GEOLOC_LIMIT}" ] || return 1
-
-	today=$(date -u +%Y%m%d)
-	todc=$(grep -c "${today}" "${GEOLOC_LIMIT}" 2>/dev/null || echo 0)
-
-	if [ "$(head -n 1 ${GEOLOC_LIMIT})" != "${today}" ] ; then
-		rm -f "${GEOLOC_LIMIT}"
-		return 1
-	fi
-	if [ ${todc} -le 2 ] ; then
-		return 1
-	fi
-
-	return 0
-}
-
-##
 # cache_not_too_old - returns 0 if it is not too old
 #
 cache_not_too_old() {
@@ -86,14 +56,8 @@ cache_not_too_old() {
 	cache_time=$(head -n 1 "${GEOLOC_CACHE}")
 	# Shell is limited to 32bits, not y2038-safe, but we don't have bc :(
 	time_delta=$(( $(date +%s -u) - cache_time ))
-	if [ $time_delta -ge 7200 ] ; then
-		# more than two hours
-
-		# can we geolocate again today?
-		if limit_daily_geolocs ; then
-			#no, use old cache
-			return 0;
-		fi
+	if [ $time_delta -ge 259200 ] ; then
+		# more than 72h
 		return 1;
 	fi
 
@@ -276,7 +240,6 @@ $scan"
 
 	echo "geolocation result: " $saida_geoloc
 	persist_geoloc_RAM $saida_geoloc
-	log_daily_geolocs
 fi
 
 TMPGEO=$(mktemp -t simetgeoloc.$$.XXXXXX) && TMPGEOD=$(mktemp -t simetgeoloc_d.$$.XXXXXX)
@@ -300,7 +263,7 @@ fi
 rm -f "$TMPGEO"
 rm -f "$TMPGEOD"
 
-echo "SIMET geoapi: measurement location result: " $envia_geolocation
-echo "SIMET geoapi: device location result: " $envia_geolocation_d
+echo "SIMET geoapi: measurement location result: $envia_geolocation"
+echo "SIMET geoapi: device location result: $envia_geolocation_d"
 
 exit 0
