@@ -2,7 +2,7 @@
 
 ###
 ## simet_geolocation.sh - simet geolocation helper
-## Copyright 2012-2017 NIC.br
+## Copyright 2012-2018 NIC.br
 ##
 ## Parameters:
 ## @1 - measure id, optional. When unspecificed, does only
@@ -186,37 +186,39 @@ if cache_not_too_old ; then
 	fi
 else
 	# GEOLOCATE
+	# FIXME: do it at a thruly low level, and firewall whatever we bring up
 
-	#FIXME: no lugar de ligar "oficialmente" o radio de forma temporária,
-	#ligar direto em modo passivo, fazer o scan, e derrubar, assim não
-	#corre o risco dele associar, receber IP, etc.
-	total_radio=$(uci show wireless | awk -F '.' '/=wifi-device/ {print $2}' | wc -l)
-	mac_address=""
-	cont=0
-	while [ $cont -lt $total_radio ]
-	do
-		echo "cont: $cont"
-		radio_state_disabled=$(uci -q get wireless.radio$cont.disabled)
-		radio_state_disabled=${radio_state_disabled:-0}
-		echo "radio_state_disabled: $radio_state_disabled"
-		if [ $radio_state_disabled == 1 ] ; then
-			uci set wireless.radio$cont.disabled=0
-			wifi
-			sleep 10
-		fi
-		scan=
-		for i in 1 2 3 4 5; do
-			[ -z "$scan" ] && scan=$(iw wlan$cont scan | awk '/^BSS / {print $2}' | sed -e 's/(on//')
-			[ -z "$scan" ] && sleep 5
-		done
-		if [ $radio_state_disabled == 1 ] ; then
-			uci set wireless.radio$cont.disabled=1
-			wifi
-		fi
-		mac_address="$mac_address
+	# save radio disabled state, and force-enable them
+	TMPRADIO=$(mktemp -t simetgeoloc.$$.XXXXXX) || exit 1
+	[ -z "$TMPRADIO" ] && exit 1
+	uci show wireless | grep -E "\.disabled='?(1|true|on|yes|enabled)" > "$TMPRADIO"
+	sed -n '/[.]disabled=/ {s/=.*// p}' < "$TMPRADIO" | xargs -r -n1 uci delete && uci commit wireless
+	grep -q 'disabled=' "$TMPRADIO" && {
+		# "wifi" greatly disturbs DFS channels, don't call if we can avoid it
+		wifi
+		sleep 10
+	}
+
+	mac_address=
+	WDEVS=$(iw dev | sed -n -e '/nterface/ {s/.*nterface[[:blank:]]\+// p}')
+	if [ -n "$WDEVS" ] ; then
+		for w in $WDEVS ; do
+			scan=
+			for i in 1 2 3 4 5; do
+				[ -z "$scan" ] && scan=$(iw "$w" scan | awk '/^BSS / {print $2}' | sed -e 's/(on//')
+				[ -z "$scan" ] && sleep 5
+			done
+			mac_address="$mac_address
 $scan"
-		cont=$(expr $cont + 1)
-	done
+		done
+	else
+		echo "Could not find any enabled wireless devices to use for geolocation"
+	fi
+
+	# restore radio disabled state
+	xargs -r -n1 uci set < "$TMPRADIO" && uci commit wireless
+	grep -q 'disabled=' "$TMPRADIO" && wifi
+	[ -n "$TMPRADIO" ] && rm -f "$TMPRADIO"
 
 	echo "BSSes detected for geolocalization: $mac_address"
 
