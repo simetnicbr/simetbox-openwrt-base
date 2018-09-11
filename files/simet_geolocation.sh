@@ -2,7 +2,7 @@
 
 ###
 ## simet_geolocation.sh - simet geolocation helper
-## Copyright 2012-2017 NIC.br
+## Copyright 2012-2018 NIC.br
 ##
 ## Parameters:
 ## @1 - measure id, optional. When unspecificed, does only
@@ -13,7 +13,6 @@
 # isso não é oficialmente documentado.
 GEOLOC_DIR=/tmp/simet_geo
 GEOLOC_CACHE="${GEOLOC_DIR}/simet_geolocation_cache"
-GEOLOC_LIMIT="${GEOLOC_DIR}/simet_geolocation_tries"
 
 . /etc/config/simet.conf
 [ -r /etc/config/simet-private.conf ] && . /etc/config/simet-private.conf
@@ -49,35 +48,6 @@ persist_geoloc_RAM() {
 }
 
 ##
-# log_daily_geolocs() - log we did a geoloc today
-#
-log_daily_geolocs() {
-	date -u +%Y%m%d >> "${GEOLOC_LIMIT}"
-}
-
-##
-# limit_daily_geolocs() - limita geolocations/dia
-#
-# retorna 0 se atingiu limite de geolocalizacoes
-#
-limit_daily_geolocs() {
-	[ -r "${GEOLOC_LIMIT}" ] || return 1
-
-	today=$(date -u +%Y%m%d)
-	todc=$(grep -c "${today}" "${GEOLOC_LIMIT}" 2>/dev/null || echo 0)
-
-	if [ "$(head -n 1 ${GEOLOC_LIMIT})" != "${today}" ] ; then
-		rm -f "${GEOLOC_LIMIT}"
-		return 1
-	fi
-	if [ ${todc} -le 2 ] ; then
-		return 1
-	fi
-
-	return 0
-}
-
-##
 # cache_not_too_old - returns 0 if it is not too old
 #
 cache_not_too_old() {
@@ -86,14 +56,8 @@ cache_not_too_old() {
 	cache_time=$(head -n 1 "${GEOLOC_CACHE}")
 	# Shell is limited to 32bits, not y2038-safe, but we don't have bc :(
 	time_delta=$(( $(date +%s -u) - cache_time ))
-	if [ $time_delta -ge 7200 ] ; then
-		# more than two hours
-
-		# can we geolocate again today?
-		if limit_daily_geolocs ; then
-			#no, use old cache
-			return 0;
-		fi
+	if [ $time_delta -ge 259200 ] ; then
+		# more than 72h
 		return 1;
 	fi
 
@@ -222,37 +186,39 @@ if cache_not_too_old ; then
 	fi
 else
 	# GEOLOCATE
+	# FIXME: do it at a thruly low level, and firewall whatever we bring up
 
-	#FIXME: no lugar de ligar "oficialmente" o radio de forma temporária,
-	#ligar direto em modo passivo, fazer o scan, e derrubar, assim não
-	#corre o risco dele associar, receber IP, etc.
-	total_radio=$(uci show wireless | awk -F '.' '/=wifi-device/ {print $2}' | wc -l)
-	mac_address=""
-	cont=0
-	while [ $cont -lt $total_radio ]
-	do
-		echo "cont: $cont"
-		radio_state_disabled=$(uci -q get wireless.radio$cont.disabled)
-		radio_state_disabled=${radio_state_disabled:-0}
-		echo "radio_state_disabled: $radio_state_disabled"
-		if [ $radio_state_disabled == 1 ] ; then
-			uci set wireless.radio$cont.disabled=0
-			wifi
-			sleep 10
-		fi
-		scan=
-		for i in 1 2 3 4 5; do
-			[ -z "$scan" ] && scan=$(iw wlan$cont scan | awk '/^BSS / {print $2}' | sed -e 's/(on//')
-			[ -z "$scan" ] && sleep 5
-		done
-		if [ $radio_state_disabled == 1 ] ; then
-			uci set wireless.radio$cont.disabled=1
-			wifi
-		fi
-		mac_address="$mac_address
+	# save radio disabled state, and force-enable them
+	TMPRADIO=$(mktemp -t simetgeoloc.$$.XXXXXX) || exit 1
+	[ -z "$TMPRADIO" ] && exit 1
+	uci show wireless | grep -E "\.disabled='?(1|true|on|yes|enabled)" > "$TMPRADIO"
+	sed -n '/[.]disabled=/ {s/=.*// p}' < "$TMPRADIO" | xargs -r -n1 uci delete && uci commit wireless
+	grep -q 'disabled=' "$TMPRADIO" && {
+		# "wifi" greatly disturbs DFS channels, don't call if we can avoid it
+		wifi
+		sleep 10
+	}
+
+	mac_address=
+	WDEVS=$(iw dev | sed -n -e '/nterface/ {s/.*nterface[[:blank:]]\+// p}')
+	if [ -n "$WDEVS" ] ; then
+		for w in $WDEVS ; do
+			scan=
+			for i in 1 2 3 4 5; do
+				[ -z "$scan" ] && scan=$(iw "$w" scan | awk '/^BSS / {print $2}' | sed -e 's/(on//')
+				[ -z "$scan" ] && sleep 5
+			done
+			mac_address="$mac_address
 $scan"
-		cont=$(expr $cont + 1)
-	done
+		done
+	else
+		echo "Could not find any enabled wireless devices to use for geolocation"
+	fi
+
+	# restore radio disabled state
+	xargs -r -n1 uci set < "$TMPRADIO" && uci commit wireless
+	grep -q 'disabled=' "$TMPRADIO" && wifi
+	[ -n "$TMPRADIO" ] && rm -f "$TMPRADIO"
 
 	echo "BSSes detected for geolocalization: $mac_address"
 
@@ -276,7 +242,6 @@ $scan"
 
 	echo "geolocation result: " $saida_geoloc
 	persist_geoloc_RAM $saida_geoloc
-	log_daily_geolocs
 fi
 
 TMPGEO=$(mktemp -t simetgeoloc.$$.XXXXXX) && TMPGEOD=$(mktemp -t simetgeoloc_d.$$.XXXXXX)
@@ -300,7 +265,7 @@ fi
 rm -f "$TMPGEO"
 rm -f "$TMPGEOD"
 
-echo "SIMET geoapi: measurement location result: " $envia_geolocation
-echo "SIMET geoapi: device location result: " $envia_geolocation_d
+echo "SIMET geoapi: measurement location result: $envia_geolocation"
+echo "SIMET geoapi: device location result: $envia_geolocation_d"
 
 exit 0
