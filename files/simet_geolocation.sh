@@ -8,6 +8,7 @@
 ## @1 - measure id, optional. When unspecificed, does only
 ##      device geolocation webservice update calls.
 ##
+## simet_geolocation.sh API level: 1
 
 # Pode ser modificado por simet.conf ou simet-private.conf, mas
 # isso não é oficialmente documentado.
@@ -28,7 +29,7 @@ GEOLOC_CACHE="${GEOLOC_DIR}/simet_geolocation_cache"
 
 if [ -z "$GOOGLE_MAP_GEOLOC_APIKEY" ] ; then
 	echo "$0: please define GOOGLE_MAP_GEOLOC_APIKEY in /etc/config/simet-private.conf" >&2
-	exit 0
+	exit 26
 fi
 
 hash_device=${hash_device:-$(get_mac_address.sh)}
@@ -156,7 +157,7 @@ geoapi_precheck() {
 	# no minimo 2 BSS sao necessarios
 	if [ $# -le 2 ] ; then
 		echo "Not enough BSS addresses to geo-locate" >&2
-		exit 0
+		exit 1
 	fi
 	:
 }
@@ -169,20 +170,23 @@ geoapi_precheck() {
 hash_measure=$1
 
 if [ -z "$hash_measure" ] ; then
-	echo "hash_measure not specificed, will persist only device location"
+	echo "hash_measure not specificed, will persist only device location" >&2
 fi
 
 if cache_not_too_old ; then
 	# return from cache
 
-	echo "Using cached geolocation..."
+	echo "Using cached geolocation..." >&2
 	saida_geoloc=$(tail -n 1 "${GEOLOC_CACHE}")
-	echo "geolocation result (cached): $saida_geoloc"
+	echo "geolocation result (cached): $saida_geoloc" >&2
+
+	# result to stdout
+	tail -n 2 "${GEOLOC_CACHE}"
 
 	if [ -z "${saida_geoloc}" ] ; then
 		echo "error: geolocation cache corrupted, removing..." >&2
 		rm -f "${GEOLOC_CACHE}"
-		exit 0
+		exit 3
 	fi
 else
 	# GEOLOCATE
@@ -195,7 +199,7 @@ else
 	sed -n '/[.]disabled=/ {s/=.*// p}' < "$TMPRADIO" | xargs -r -n1 uci delete && uci commit wireless
 	grep -q 'disabled=' "$TMPRADIO" && {
 		# "wifi" greatly disturbs DFS channels, don't call if we can avoid it
-		wifi
+		wifi >&2
 		sleep 10
 	}
 
@@ -212,7 +216,7 @@ else
 $scan"
 		done
 	else
-		echo "Could not find any enabled wireless devices to use for geolocation"
+		echo "Could not find any enabled wireless devices to use for geolocation" >&2
 	fi
 
 	# restore radio disabled state
@@ -220,7 +224,7 @@ $scan"
 	grep -q 'disabled=' "$TMPRADIO" && wifi
 	[ -n "$TMPRADIO" ] && rm -f "$TMPRADIO"
 
-	echo "BSSes detected for geolocalization: $mac_address"
+	echo "BSSes detected for geolocalization: $mac_address" >&2
 
 	geoapi_precheck $mac_address
 
@@ -237,11 +241,13 @@ $scan"
 	if [ "x$saida_geoloc" = "x" ] ; then
 		# Problema ao contactar o google, aborta sem sinalizar erro
 		echo "geolocation API call failed" >&2
-		exit 0
+		exit 24
 	fi
 
-	echo "geolocation result: " $saida_geoloc
+	echo "geolocation result: " $saida_geoloc >&2
 	persist_geoloc_RAM $saida_geoloc
+	# result to stdout
+	tail -n 2 "${GEOLOC_CACHE}"
 fi
 
 TMPGEO=$(mktemp -t simetgeoloc.$$.XXXXXX) && TMPGEOD=$(mktemp -t simetgeoloc_d.$$.XXXXXX)
@@ -249,7 +255,7 @@ TMPGEO=$(mktemp -t simetgeoloc.$$.XXXXXX) && TMPGEOD=$(mktemp -t simetgeoloc_d.$
 if [ -z "$TMPGEO" ] || [ -z "$TMPGEOD" ] ; then
 	[ -n "$TMPGEO" ] && rm -f "$TMPGEO"
 	[ -n "$TMPGEOD" ] && rm -f "$TMPGEOD"
-	exit 1
+	exit 3
 fi
 
 generate_simetws_device  $saida_geoloc > "$TMPGEOD"
@@ -265,7 +271,7 @@ fi
 rm -f "$TMPGEO"
 rm -f "$TMPGEOD"
 
-echo "SIMET geoapi: measurement location result: $envia_geolocation"
-echo "SIMET geoapi: device location result: $envia_geolocation_d"
+echo "SIMET geoapi: measurement location result: $envia_geolocation" >&2
+echo "SIMET geoapi: device location result: $envia_geolocation_d" >&2
 
 exit 0

@@ -29,7 +29,7 @@ do
     echo "${hash_device}" > /etc/config/simetbox_hash_configured
     sleep 2
     # geolocalização de registro da caixa
-    simet_geolocation.sh
+    simet_geolocation.sh >/dev/null || true
   else
     sleep 60
   fi
