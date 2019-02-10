@@ -112,7 +112,8 @@ function generate_crontab()
           service_down = { command =  "sendifupdown.sh" },                                                      
           simet_alexa = { command = "simet_alexa" },                         
           simet_send_if_traffic = { command = "simet_send_if_traffic.sh" },
-          simet_test = { command = "run_simet.sh"}
+          simet_test = { command = "run_simet.sh"},
+          simet_measure = { command = "simet-ma_run.sh --config /usr/lib/simet/simet-ma.conf --config /etc/simet/simet-ma.conf" }
         }                                                                                                         
                                                                                                                           
         local config_table = {}                                                                                           
