@@ -78,6 +78,11 @@ write_new_default_values()
 		uci -c /tmp/config set simet_cron.simet_send_if_traffic.enable=true
 	fi
 
+	#### SIMET MA
+	uci -c /tmp/config set simet_cron.simet_measure=simet_measure
+	uci -c /tmp/config set simet_cron.simet_measure.time_step=60
+	uci -c /tmp/config set simet_cron.simet_measure.enable=true
+
 	uci -c /tmp/config commit simet_cron
 }
 
