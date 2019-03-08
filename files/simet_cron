@@ -32,6 +32,3 @@ config 'simet_port25' 'simet_port25'
 
 config 'simet_send_if_traffic' 'simet_send_if_traffic'
 	option 'time_step' '20'
-
-config 'simet_measure' 'simet_measure'
-	option 'time_step' '60'
