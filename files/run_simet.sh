@@ -7,11 +7,11 @@ if [ "$ntpq_enable" == "true" ] ; then
   /usr/bin/simet_ntpq
 fi
 if test -n "$hash_measure_v4" ; then
-	/usr/bin/simet_geolocation.sh $hash_measure_v4 >/dev/null || true
+	/usr/bin/simet_geolocation_legado.sh $hash_measure_v4 >/dev/null || true
 	/usr/bin/simet_client -4 -m $hash_measure_v4
 	sleep 5
 fi
 if test -n "$hash_measure_v6" ; then
-	/usr/bin/simet_geolocation.sh $hash_measure_v6 >/dev/null || true
+	/usr/bin/simet_geolocation_legado.sh $hash_measure_v6 >/dev/null || true
 	/usr/bin/simet_client -6 -m $hash_measure_v6
 fi

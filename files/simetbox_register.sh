@@ -27,9 +27,6 @@ do
   output_send_hash=$(simet_ws -p "https://$cf_host/$cf_simet_web_services_optional/resources/simetbox" "$parametros" | grep "\"success\":true")
   if [ "$output_send_hash" != "" ] ; then
     echo "${hash_device}" > /etc/config/simetbox_hash_configured
-    sleep 2
-    # geolocalização de registro da caixa
-    simet_geolocation.sh >/dev/null || true
   else
     sleep 60
   fi
