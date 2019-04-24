@@ -1,6 +1,6 @@
 # initial information about the project
 AC_PREREQ([2.63])
-AC_INIT([simet-tools],[100][medicoes@simet.nic.br])
+AC_INIT([simet-tools],[100.1][medicoes@simet.nic.br])
 AM_INIT_AUTOMAKE
 AC_CONFIG_HEADERS([src/config.h])
 
