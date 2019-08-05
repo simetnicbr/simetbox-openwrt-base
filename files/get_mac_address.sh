@@ -6,6 +6,9 @@ case "$model" in
 	TP-LINK*TL-WR740N*V4)
 		mac_address=$(cat /sys/devices/platform/ar933x_wmac/ieee80211/phy0/macaddress)
 		;;
+	UBIQUITI_LOCO_M_XW)
+		mac_address=$(cat /sys/devices/platform/ar934x_wmac/ieee80211/phy0/macaddress)
+		;;
 	TP-LINK*ARCHER_C60_V2)
 		mac_address=$(cat /sys/devices/platform/qca956x_wmac/ieee80211/phy1/macaddress)
 		;;
