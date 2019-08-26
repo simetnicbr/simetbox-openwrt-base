@@ -19,10 +19,11 @@ case "$model" in
 		mac_address=$(cat /sys/devices/pci0000:00/0000:00:00.0/ieee80211/phy1/macaddress)
 		;;
 	*)
-		mac_address=$(ifconfig | grep 'br-lan ' | sed s/[\ ]/'\n'/g | sed -e s/://g | grep -E '^[0-9A-Fa-f]{12}')
-		if [ -z "$mac_address" ] ; then
-			mac_address=$(ifconfig | grep 'eth0 ' | sed s/[\ ]/'\n'/g | sed -e s/://g | grep -E '^[0-9A-Fa-f]{12}')
-		fi
+		mac_address=$(cat /sys/class/net/br-lan/address 2>/dev/null) || mac_address=
+		;;
 esac
+
+[ -z "$mac_address" ] && \
+	mac_address=$(cat /sys/class/net/*lan*/address /sys/class/net/*wan*/address /sys/class/net/eth*/address /sys/class/net/*/address 2>/dev/null | sed -nE -e '/[0:]+$/ d' -e 's/://g' -e '/^[0-9A-Fa-f]{12}$/ { p; q }' ) || true
 
 echo "$mac_address" | tr -d : | tr A-Z a-z
