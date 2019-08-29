@@ -23,12 +23,6 @@ write_new_default_values()
 		uci -c /tmp/config set simet_cron.content_provider.enable=true
 	fi
 
-	if [ -f /etc/config/simet_installed/simetbox_network_and_config_installed ] ; then
-		uci -c /tmp/config set simet_cron.service_down=service_down
-		uci -c /tmp/config set simet_cron.service_down.time_step=60
-		uci -c /tmp/config set simet_cron.service_down.enable=true
-	fi
-
 	if [ -f /etc/config/simet_installed/simetbox_dns_installed ] ; then
 		uci -c /tmp/config set simet_cron.simet_dns=simet_dns
 		uci -c /tmp/config set simet_cron.simet_dns.time_step=240
@@ -77,6 +71,9 @@ write_new_default_values()
 		uci -c /tmp/config set simet_cron.simet_send_if_traffic.time_step=20
 		uci -c /tmp/config set simet_cron.simet_send_if_traffic.enable=true
 	fi
+
+	### SIMET Legado - removidos
+	uci -c /tmp/config delete simet_cron.service_down || true
 
 	#### SIMET MA - remove due to lmapd switch
 	uci -c /tmp/config delete simet_cron.simet_measure || true
