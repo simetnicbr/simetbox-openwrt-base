@@ -109,7 +109,6 @@ function generate_crontab()
           simet_dns = { command = "simet_dns; simet_dns_ping_traceroute.sh"},
           simet_ping = { params = {"c", "W"}, command = "simet_ping.sh" },
           simet_port25 = { command = "simet_porta25" } ,                     
-          service_down = { command =  "sendifupdown.sh" },                                                      
           simet_alexa = { command = "simet_alexa" },                         
           simet_send_if_traffic = { command = "simet_send_if_traffic.sh" },
           simet_test = { command = "run_simet.sh"}
