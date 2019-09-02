@@ -4,9 +4,6 @@ config 'auto_upgrade' 'auto_upgrade'
 config 'content_provider' 'content_provider'
 	option 'time_step' '60'
 
-config 'service_down' 'service_down'
-	option 'time_step' '60'
-
 config 'simet_dns' 'simet_dns'
 	option 'time_step' '240'
 
