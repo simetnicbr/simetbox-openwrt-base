@@ -65,21 +65,23 @@ $device_procuct" > /etc/device_info
 		acs_server=$(cat /etc/config/tr069_server | sed -e "s/http:\/\///g" | sed -e "s/https:\/\///g" | sed -e "s/\/.*//")
 		ip_acs_server=$(ping -4 $acs_server -c 1 2>/dev/null | grep "64 bytes" | awk {'print $4'} | sed -e 's/://g')
 		if [ "ip_acs_server" != "" ] ; then
-
 			firewall=$(grep "Allow-TR-069" /etc/config/firewall)
 			if [ "$firewall" == "" ] ; then
-
-			echo "
+				echo "
 config rule
         option name             Allow-TR-069
         option src              wan
         option src_ip           '$ip_acs_server'
-        option proto            TCP
+        option proto            tcp
         option dest_port        7547
         option target           ACCEPT
         option family           ipv4
 " >> /etc/config/firewall
-			/etc/init.d/firewall restart
+				/etc/init.d/firewall restart
+			else
+				# fix proto='TCP' where it should have been proto='tcp'
+				uci show firewall | sed -nE "/proto='TCP'/ { s/proto='TCP'/proto=tcp/ ; s/^/set / ; p }" \
+					| uci batch && uci commit firewall
 			fi
 		fi
 	fi
