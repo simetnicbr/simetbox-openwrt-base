@@ -16,11 +16,11 @@ openwrt_read_invariant_seed()
 )
 
 start() {
-	if [ ! -f "/etc/config/hash" ]
+	if [ ! -f "/etc/simet/simet1_hash" ]
 	then
 	  hash_mac_address=$(openwrt_read_invariant_seed 2>/dev/null) \
 	    || hash_mac_address=$(dd if=/dev/urandom bs=32 count=1 2>/dev/null | md5sum - | tr -dc 0-9a-zA-Z)
-	  [ -n "$hash_mac_address" ] && echo "$hash_mac_address" > /etc/config/hash
+	  [ -n "$hash_mac_address" ] && echo "$hash_mac_address" > /etc/simet/simet1_hash
 	fi
 
 	# load in the release data
