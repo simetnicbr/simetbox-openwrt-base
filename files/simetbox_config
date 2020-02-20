@@ -3,37 +3,24 @@
 
 START=50
 
+openwrt_read_invariant_seed()
+(
+  # This is a hack, it is not perfect, and not that secure.
+  # note: this can be quite expensive in CPU and wall time
+  P=$( sed -En -e '/^mtd[0-9]/! d' -e '/rootfs|firmware|kernel/ d' -e 's#(mtd[^:]+).*#/dev/\1ro# ; p' < /proc/mtd ) || P=/dev/null
+  [ -z "$P" ] && P=/dev/null
+  SBXSEED=$( set -o pipefail ; { echo "NIC IV nhZ6wZivEdaW3+9kUXhpLSeWiOmOX12TK/ZO2pFmtdF8w" ; cat -- $P ; } | md5sum - | tr -dc 0-9a-zA-Z ) || return 1
+  [ -z "$SBXSEED" ] && return 1
+  printf "%s" "$SBXSEED"
+  :
+)
+
 start() {
 	if [ ! -f "/etc/config/hash" ]
 	then
-		total_radio=$(uci show wireless | awk -F '.' '{print $2}' | grep "=wifi-device" | wc -l)
-		mac_address=""
-		cont=0
-		while [ $cont -lt $total_radio ]
-		do
-		        echo "cont: $cont"
-		        radio_state_disabled=$(uci get wireless.radio$cont.disabled)
-		        echo "radio_state_disabled: $radio_state_disabled"
-		        if [ $radio_state_disabled == 1 ] ; then
-		                uci set wireless.radio$cont.disabled=0
-		                wifi
-		                sleep 5
-		        fi
-
-		        mac_address="$mac_address
-$(ifconfig | grep wlan$cont | grep HWaddr | awk '{print $5}')"
-
-		        if [ $radio_state_disabled == 1 ] ; then
-		                uci set wireless.radio$cont.disabled=1
-		                wifi
-		        fi
-
-		        cont=$(expr $cont + 1)
-		done
-		mac_address="$mac_address
-		$(ifconfig -a | grep HWaddr | awk '{print $5}')"
-		hash_mac_address=$(echo "$mac_address" | sort | uniq | md5sum | awk '{print $1}')
-		echo "$hash_mac_address" > /etc/config/hash
+	  hash_mac_address=$(openwrt_read_invariant_seed 2>/dev/null) \
+	    || hash_mac_address=$(dd if=/dev/urandom bs=32 count=1 2>/dev/null | md5sum - | tr -dc 0-9a-zA-Z)
+	  [ -n "$hash_mac_address" ] && echo "$hash_mac_address" > /etc/config/hash
 	fi
 
 	# load in the release data
@@ -43,8 +30,6 @@ $(ifconfig | grep wlan$cont | grep HWaddr | awk '{print $5}')"
 	if test -n "${DISTRIB_ID}" && test "${DISTRIB_ID}" != "${DISTRIB_ID#SIMETBOX}" ; then
         	prefix="SIMETBOX-"
 	fi
-
-	sleep 10 # wait for 10 seconds to start the network
 
 	if [ -f "/etc/config/simet_installed/simetbox_network_and_config_installed" ]
 	then
