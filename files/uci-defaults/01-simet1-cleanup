@@ -1,0 +1,4 @@
+#!/bin/sh
+
+rm -f /etc/config/simetbox_hash_configured /etc/config/hash 2>/dev/null
+exit 0

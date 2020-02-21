@@ -252,7 +252,7 @@ end
 
 --testado
 function get_device_hash()
-    return read_from_bash("cat /etc/config/hash")
+    return read_from_bash("cat /etc/simet/simet1_hash")
 end
 
 --testado
