@@ -1,6 +1,3 @@
-config 'auto_upgrade' 'auto_upgrade'
-	option 'time_step' '240'
-
 config 'content_provider' 'content_provider'
 	option 'time_step' '60'
 
