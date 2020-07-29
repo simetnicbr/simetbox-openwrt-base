@@ -11,12 +11,6 @@ write_new_default_values()
 	rm -f /tmp/config/simet_cron
 	touch /tmp/config/simet_cron
 
-	if [ -f /etc/config/simet_installed/simetbox_nicbr_installed ] ; then
-		uci -c /tmp/config set simet_cron.auto_upgrade=auto_upgrade
-		uci -c /tmp/config set simet_cron.auto_upgrade.time_step=240
-		uci -c /tmp/config set simet_cron.auto_upgrade.enable=true
-	fi
-
 	if [ -f /etc/config/simet_installed/simetbox_contentprovider_installed ] ; then
 		uci -c /tmp/config set simet_cron.content_provider=content_provider
 		uci -c /tmp/config set simet_cron.content_provider.time_step=60
@@ -74,8 +68,9 @@ write_new_default_values()
 
 	### SIMET Legado - removidos
 	uci -c /tmp/config delete simet_cron.service_down || true
+	uci -c /tmp/config delete simet_cron.auto_upgrade || true
 
-	#### SIMET MA - remove due to lmapd switch
+	### SIMET MA - remove due to lmapd switch
 	uci -c /tmp/config delete simet_cron.simet_measure || true
 
 	uci -c /tmp/config commit simet_cron
