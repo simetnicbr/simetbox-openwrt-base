@@ -103,7 +103,6 @@ function generate_crontab()
         local tests_table = {}                                                                                            
                                                                                                                           
         tests_table = {                                                
-          auto_upgrade = { command = "auto_upgrade"},                
           simet_bcp38 = { command = "simet_bcp38"},                          
           content_provider = { command = "sendcontentprovider.sh -4 ; sendcontentprovider.sh -6"},          
           simet_dns = { command = "simet_dns; simet_dns_ping_traceroute.sh"},
