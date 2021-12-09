@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. /etc/config/simet.conf
+. /etc/simet/simet1.conf
 
 hash_device=$(/usr/bin/get_mac_address.sh)
 hash=$(cat /etc/simet/simet1_hash)
