@@ -31,7 +31,7 @@ start() {
         	prefix="SIMETBOX-"
 	fi
 
-	if [ -f "/etc/config/simet_installed/simetbox_network_and_config_installed" ]
+	if [ -f "/usr/lib/simet/simet_installed/simetbox_network_and_config_installed" ]
 	then
 		uci set easycwmp.@acs[0].periodic_interval='30'
 		uci set easycwmp.@acs[0].username=$(get_mac_address.sh)

@@ -1,6 +1,10 @@
 #!/bin/sh
 
 rm -f /etc/config/simetbox_hash_configured /etc/config/hash 2>/dev/null
+
+rm -f /etc/config/simet_installed/*_installed 2>/dev/null
+rmdir /etc/config/simet_installed 2>/dev/null || :
+
 if [ -f /etc/simet/simet1.conf ] ; then
 	rm -f /etc/config/simet.conf
 else
