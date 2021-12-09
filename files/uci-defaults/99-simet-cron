@@ -106,14 +106,6 @@ config_load simet_cron
 
 mv /tmp/config/simet_cron /etc/config/simet_cron
 
-if [ -f "/etc/config/configured" ];
-then
-		pos_upgrade=0
-else
-		pos_upgrade=1
-fi
-
-
 lua -e "require('simet.crontab_writer');generate_crontab()"
 
 exit 0
