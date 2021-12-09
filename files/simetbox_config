@@ -39,7 +39,7 @@ start() {
 		uci set easycwmp.@local[0].username=$(get_mac_address.sh)
 		uci set easycwmp.@local[0].password=$(get_mac_address.sh)
 		uci set easycwmp.@device[0].oui='SIMETBOX'
-		uci set easycwmp.@acs[0].url=$(cat /etc/config/tr069_server)
+		uci set easycwmp.@acs[0].url=$(cat /etc/simet/tr069_server)
 		uci set easycwmp.@device[0].serial_number=$(get_mac_address.sh)
 		device_procuct=$(grep -v "DEVICE_MANUFACTURER" /etc/device_info | grep -v "DEVICE_PRODUCT")
 		echo "DEVICE_MANUFACTURER='$(grep -e "^machine" /proc/cpuinfo | awk '{print $3}')'
@@ -47,7 +47,7 @@ DEVICE_PRODUCT='$prefix$(/usr/bin/get_model.sh)'
 $device_procuct" > /etc/device_info
 		uci commit easycwmp
 
-		acs_server=$(cat /etc/config/tr069_server | sed -e "s/http:\/\///g" | sed -e "s/https:\/\///g" | sed -e "s/\/.*//")
+		acs_server=$(cat /etc/simet/tr069_server | sed -e "s/http:\/\///g" | sed -e "s/https:\/\///g" | sed -e "s/\/.*//")
 		ip_acs_server=$(ping -4 $acs_server -c 1 2>/dev/null | grep "64 bytes" | awk {'print $4'} | sed -e 's/://g')
 		if [ "ip_acs_server" != "" ] ; then
 			firewall=$(grep "Allow-TR-069" /etc/config/firewall)

@@ -10,4 +10,10 @@ if [ -f /etc/simet/simet1.conf ] ; then
 else
 	mv -f /etc/config/simet.conf /etc/simet/simet1.conf
 fi
+
+if [ -f /etc/simet/tr069_server ] ; then
+	rm -f /etc/config/tr069_server
+else
+	mv -f /etc/config/tr069_server /etc/simet/tr069_server
+fi
 exit 0
