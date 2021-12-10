@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. /etc/config/simet.conf
+. /etc/simet/simet1.conf
 # inicia a variaveis
 zipdate="/tmp/simet_ping.date"
 zipfile="/tmp/simet_ping.gz"

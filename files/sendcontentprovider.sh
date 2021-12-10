@@ -1,5 +1,5 @@
 #!/bin/sh
-. /etc/config/simet.conf
+. /etc/simet/simet1.conf
 
 mac_address=`get_mac_address.sh`
 

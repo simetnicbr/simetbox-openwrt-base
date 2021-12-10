@@ -1,5 +1,5 @@
 #!/bin/sh
-source /etc/config/simet.conf
+source /etc/simet/simet1.conf
 hash_measure_v4=$(/usr/bin/simet_hash_measure -s $cf_host)
 hash_measure_v6=$(/usr/bin/simet_hash_measure -s $cf_host)
 ntpq_enable=$(uci get simet_cron.simet_ntpq.enable)

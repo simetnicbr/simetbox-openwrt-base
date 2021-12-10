@@ -9,7 +9,7 @@ mac_address=`get_mac_address.sh`
 peer_id=$mac_address"SIMETBOX"
 
 
-source /etc/config/simet.conf
+source /etc/simet/simet1.conf
 
 simet_ws http://$cf_TorrentFile_host/$cf_TorrentFile_name.torrent -f /tmp/$cf_TorrentFile_name.torrent
 

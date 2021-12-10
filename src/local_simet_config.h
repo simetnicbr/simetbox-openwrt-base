@@ -1,6 +1,6 @@
 #ifndef CONFIG_H
 #define CONFIG_H
-#define ARQ_CONFIG	"/etc/config/simet.conf"
+#define ARQ_CONFIG	"/etc/simet/simet1.conf"
 typedef struct {
 	char *host;
 	char *port;

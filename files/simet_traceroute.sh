@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. /etc/config/simet.conf
+. /etc/simet/simet1.conf
 param_hash_measure=0
 tem_nome=0
 tem_origem=0

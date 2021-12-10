@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. /etc/config/simet.conf
+. /etc/simet/simet1.conf
 
 . /usr/bin/test_runner.sh
 

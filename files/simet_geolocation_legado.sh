@@ -38,7 +38,7 @@ log() {
 }
 
 # for old API data
-. /etc/config/simet.conf
+. /etc/simet/simet1.conf
 
 . /usr/lib/simet/simet_lib.sh
 [ -z "$GEOLOC_CACHE" ] && abend "GEOLOC_CACHE missing from conf file"
