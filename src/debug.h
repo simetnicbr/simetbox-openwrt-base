@@ -8,13 +8,11 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-
-
 #include <features.h>
 #include <stdio.h>
 #include <string.h>
 
-#if defined __cplusplus && __GNUC_PREREQ (2,95)
+#if defined __cplusplus
 # define __DEBUG_VOID_CAST static_cast<void>
 #else
 # define __DEBUG_VOID_CAST (void)
@@ -27,7 +25,7 @@
 #endif
 
 
-//#undef NTRACE
+/*#undef NTRACE*/
 #ifdef NTRACE
 #define TRACE_PRINT(fmt, ...)  (__DEBUG_VOID_CAST (0))
 #else
@@ -38,5 +36,5 @@
 #define INFO_PRINT(...) do { fprintf(stderr,"\nINFO\t"); fprintf(stderr, __VA_ARGS__);} while (0)
 #define ERROR_PRINT(...) do {fprintf(stderr,"\n%s:%3.d\tERROR\t", __FILE__, __LINE__); fprintf(stderr, __VA_ARGS__);} while (0)
 #define ERRNO_PRINT(...) do {fprintf(stderr,"\n%s:%3.d\tERRNO %s\t", __FILE__, __LINE__, strerror(errno)); fprintf(stderr, __VA_ARGS__);} while (0)
-#endif                          /* DEBUG_H */
 
+#endif /* DEBUG_H */
