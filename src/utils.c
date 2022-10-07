@@ -40,6 +40,7 @@
 #include "netsimet.h"
 #include "gopt.h"
 
+char *lockFilename;
 
 char *detecta_interface_std_gw () {
 	char *ret_func;

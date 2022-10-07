@@ -29,7 +29,7 @@
 
 
 
-char *lockFilename;
+extern char *lockFilename;
 
 
 typedef struct {
