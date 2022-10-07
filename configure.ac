@@ -58,190 +58,6 @@ else
    fi
 fi
 
-# ------------------------------------------------------------------------
-# SSL Code
-# ------------------------------------------------------------------------
-
-# Check for ssl includes (taken from the stunnel project)
-checksslincldir() { :
-    if test -f "$1/openssl/ssl.h"; then
-        sslincldir="$1"
-        return 0
-    fi
-    return 1
-}
-
-# Check for ssl libraries 
-checkssllibdirdynamic() { :
-    if test "(" -f "$1/libcrypto.so" -o -f "$1/libcrypto.dylib" ")"  -a \
-            "(" -f "$1/libssl.so"    -o -f "$1/libssl.dylib" ")" ; then
-        ssllibdir="$1"
-        return 0
-    fi
-    return 1
-}
-
-checkssllibdirstatic() { :
-    if test "(" -f "$1/libcrypto.a" ")"  -a \
-            "(" -f "$1/libssl.a" ")" ; then
-        ssllibdir="$1"
-        return 0
-    fi
-    return 1
-}
-
-# Check if we want to have SSL
-
-AC_MSG_CHECKING([for static SSL support])
-
-AC_ARG_WITH(ssl-static,
-    [  --with-ssl-static=DIR       location of SSL installation],
-    [
-        dnl Check the specified location only
-        for dir in "$withval" "$withval/include"; do
-            checksslincldir "$dir"
-        done
-        for dir in "$withval" "$withval/lib"; do
-            checkssllibdirstatic "$dir" && break 2
-        done
-        use_sslstatic=1
-        LDFLAGS="`echo $LDFLAGS | sed -e 's/-rdynamic/-ldl/g'`"
-        AC_MSG_RESULT([enabled])
-        AC_DEFINE([HAVE_OPENSSL], 1, [Define to 1 if you have openssl.])
-        AC_SUBST(sslincldir)
-        AC_SUBST(ssllibdir)
-#        CFLAGS="$CFLAGS -I$sslincldir"
-        LIBS="$LIBS $ssllibdir/libssl.a $ssllibdir/libcrypto.a -ljson-c -lsimetconfig -lpthread"
-#        LIBS="$LIBS $ssllibdir/libssl.a -ljson-c -lsimetconfig"
-    ],
-    [
-        use_sslstatic=0
-        AC_MSG_RESULT([disabled])
-    ]
-)
-
-if test "$use_sslstatic" = "0"
-then
-    AC_MSG_CHECKING([for SSL support])
-
-
-    # Check for SSL directory (taken from the stunnel project)
-    AC_ARG_WITH(ssl-dir,
-                [  --with-ssl-dir=DIR       location of SSL installation],
-                [
-                 dnl Check the specified location only
-                 for dir in "$withval" "$withval/include"; do
-                     checksslincldir "$dir"
-                 done
-                 for dir in "$withval" "$withval/lib"; do
-                     checkssllibdirdynamic "$dir" && break 2
-                 done
-                 ]
-                )
-
-    AC_MSG_CHECKING([for SSL include directory])
-    AC_ARG_WITH(ssl-incl-dir,
-                [  --with-ssl-incl-dir=DIR  location of installed SSL include files],
-                [
-                 dnl Check the specified location only
-                 checksslincldir "$withval"
-                 ],
-                 [
-                  if test -z "$sslincldir"; then
-                      dnl Search default locations of SSL includes
-                      for maindir in /usr /usr/local /usr/lib /usr/pkg /var /opt /usr/sfw; do
-                          for dir in "$maindir/include"\
-                              "$maindir/include/openssl"\ 
-                          "$maindir/include/ssl"\
-                              "$maindir/ssl/include"; do
-                          checksslincldir $dir && break 2
-                      done
-                  done
-              fi
-              ]
-                 )
-    if test -z "$sslincldir"; then
-        AC_MSG_RESULT([Not found])
-        echo
-        echo "Couldn't find your SSL header files."
-        echo "Use --with-ssl-incl-dir option to fix this problem or disable"
-        echo "the SSL support with --without-ssl"
-        echo
-        exit 1
-    fi
-    AC_MSG_RESULT([$sslincldir])
-
-    AC_MSG_CHECKING([for SSL library directory])
-    AC_ARG_WITH(ssl-lib-dir,
-                [  --with-ssl-lib-dir=DIR   location of installed SSL library files],
-                [
-                 dnl Check the specified location only
-                 checkssllibdirdynamic "$withval"
-                 ],
-                 [
-                  if test -z "$ssllibdir"; then
-                      dnl Search default locations of SSL libraries
-                      for maindir in /usr \
-                          /usr/local \
-                          /usr/pkg \
-                          /var /opt \
-                          /usr/sfw; do
-                      for dir in $maindir \
-                          $maindir/openssl \
-                          $maindir/ssl \
-                          $maindir/lib \
-                          $maindir/lib/openssl \
-                          $maindir/lib/ssl \
-                          $maindir/ssl/lib \
-                          $maindir/lib/64 \
-                          $maindir/lib/64/openssl \
-                          $maindir/lib/64/ssl \
-                          $maindir/ssl/lib/64 \
-                          $maindir/lib64 \
-                          $maindir/lib64/openssl \
-                          $maindir/lib64/ssl \
-                          $maindir/lib/x86_64-linux-gnu \
-                          $maindir/ssl/lib64; do
-                      checkssllibdirdynamic $dir && break 2
-                  done
-              done
-          fi
-          ]
-                 )
-    if test -z "$ssllibdir"; then
-        AC_MSG_RESULT([Not found])
-        echo
-        echo "Couldn't find your SSL library files."
-        echo "Use --with-ssl-lib-dir option to fix this problem or disable the"
-        echo "SSL support with --without-ssl"
-        echo
-        exit 1
-    fi
-    AC_MSG_RESULT([$ssllibdir])
-
-    AC_DEFINE([HAVE_OPENSSL], 1, [Define to 1 if you have openssl.])
-    AC_SUBST(sslincldir)
-    AC_SUBST(ssllibdir)
-    # Add SSL includes and libraries
-    if test "$sslincldir" -a "$ssllibdir"
-    then
-        if test "x$ARCH" = "xDARWIN"; then
-         # Darwin already knows about ssldirs
-         LIBS="$LIBS -lssl -lcrypto"
-#         LIBS="$LIBS -lssl"
-        elif test -f "/usr/kerberos/include/krb5.h"; then
-         # Redhat 9 compilation fix:
-         CFLAGS="$CFLAGS -I$sslincldir -I/usr/kerberos/include"
-         LIBS="$LIBS -L$ssllibdir -lssl -lcrypto"
-#         LIBS="$LIBS -L$ssllibdir -lssl"
-        else
-         #CFLAGS="$CFLAGS -I$sslincldir"
-         LIBS="$LIBS -L$ssllibdir -lssl -lcrypto"
-#         LIBS="$LIBS -L$ssllibdir -lssl"
-        fi
-    fi
-fi
-
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([fcntl.h netdb.h stdlib.h string.h sys/socket.h sys/time.h unistd.h sys/select.h bits/select.h simet_config.h])
@@ -279,11 +95,20 @@ AC_CHECK_FUNCS([sockatmark])
 AC_CHECK_FUNCS([vsnprintf])
 AC_CHECK_FUNCS([inet_ntoa])
 
+PKG_CHECK_MODULES(
+  [OPENSSL], [openssl > 0.9],
+  [
+    AC_DEFINE([HAVE_OPENSSL], 1, [Define to 1 if you have openssl.])
+    CFLAGS="$CFLAGS $OPENSSL_CFLAGS"
+    LIBS="$LIBS $OPENSSL_LIBS"
+  ],
+  [
+    AC_MSG_ERROR([openssl not found])
+  ]
+)
 # generate the final Makefile etc.
 AC_OUTPUT
 echo "                 SSL support: enabled"
-echo "       SSL include directory: ${sslincldir}"
-echo "       SSL library directory: ${ssllibdir}"
 echo "              Compiler flags: ${CFLAGS}"
 echo "                Linker flags: ${LIBS}"
 
