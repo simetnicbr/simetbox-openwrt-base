@@ -1,16 +1,14 @@
 #!/bin/sh
 # get_mac_address.sh result should match the MAC address printed in the device label
 
-# Modern OpenWRT
-mac_address=$(. /lib/functions.sh && . /lib/functions/system.sh && get_mac_label) 2>/dev/null || mac_address=
+[ -x /usr/lib/simet/vendor/get_mac_label ] && {
+	# Vendor override
+	mac_address=$(/usr/lib/simet/vendor/get_mac_label 2>/dev/null) || mac_address=
+}
 
-# If that fails, try to find from UCI
 [ -z "$mac_address" ] && {
-	# Extension from an unnamed vendor
-	label_ifname=$(uci get network.network.mac_label_ifname) 2>/dev/null || label_ifname=
-	[ -n "$label_ifname" ] && {
-		mac_address=$(cat /sys/class/net/"$label_ifname"/address 2>/dev/null) || mac_address=
-	}
+	# Modern OpenWRT
+	mac_address=$(. /lib/functions.sh && . /lib/functions/system.sh && get_mac_label) 2>/dev/null || mac_address=
 }
 
 [ -z "$mac_address" ] && {
@@ -37,7 +35,8 @@ mac_address=$(. /lib/functions.sh && . /lib/functions/system.sh && get_mac_label
 	esac
 }
 
-[ -z "$mac_address" ] && \
-	mac_address=$(cat /sys/class/net/*lan*/address /sys/class/net/*wan*/address /sys/class/net/eth*/address /sys/class/net/*/address 2>/dev/null | sed -nE -e '/[0:]+$/ d' -e 's/://g' -e '/^[0-9A-Fa-f]{12}$/ { p; q }' ) || true
+[ -z "$mac_address" ] && {
+	mac_address=$(cat /sys/class/net/*lan*/address /sys/class/net/*wan*/address /sys/class/net/eth*/address /sys/class/net/*/address 2>/dev/null | sed -nE -e '/[0:]+$/ d' -e 's/://g' -e '/^[0-9A-Fa-f]{12}$/ { p; q }' ) || mac_address=
+}
 
-echo "$mac_address" | tr -d : | tr A-Z a-z
+printf "%s\n" "$(printf "%s" "$mac_address" | tr -dc 0-9a-zA-Z | tr A-Z a-z)" || :
